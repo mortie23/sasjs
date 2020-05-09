@@ -82,6 +82,14 @@ export default class SASjs {
   }
 
   /**
+   * Returns the _csrf token of the current session.
+   *
+   */
+  public getCsrf() {
+    return this._csrf;
+  }
+
+  /**
    * Sets the SASjs configuration.
    * @param config - SASjsConfig indicating SASjs Configuration
    */
@@ -150,6 +158,7 @@ export default class SASjs {
     return fetch(this.loginUrl, {
       method: "post",
       credentials: "include",
+      referrerPolicy: "same-origin",
       body: loginParamsStr,
       headers: new Headers({
         "Content-Type": "application/x-www-form-urlencoded"
