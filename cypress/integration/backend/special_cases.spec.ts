@@ -3,7 +3,6 @@ import SASjs from "../../../src/index";
 
 const adapter = new SASjs({
   serverUrl: Cypress.env("serverUrl"),
-  port: Cypress.env("port"),
   pathSAS9: "/SASStoredProcess/do",
   pathSASViya: "/SASJobExecution",
   appLoc: Cypress.env("appLoc"),
@@ -74,6 +73,7 @@ debugStates.forEach(debugState => {
           ,pct:'%percent'
           ,speech:"\"speech"
           ,slash:"\\slash"
+          ,slashWithSpecial:"\\\tslash"
           ,macvar:'&sysuserid'
           ,chinese: "传/傳chinese"
           ,sigma:"Σsigma"

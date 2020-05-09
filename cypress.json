@@ -1,9 +1,9 @@
 {
   "defaultCommandTimeout": 10000,
   "chromeWebSecurity": false,
+  "screenshotOnRunFailure": false,
   "env": {
     "serverUrl": "",
-    "port": null,
     "appLoc": "/Public/app",
     "serverType": "SAS9",
     "debug": false,

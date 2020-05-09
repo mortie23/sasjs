@@ -33,5 +33,12 @@ module.exports = (on, config) => {
       
       return launchOptions;
     }
+
+    if (browser.name === "electron") {
+      launchOptions.preferences.devTools = true;
+      launchOptions.preferences.webPreferences.webSecurity = false;
+      
+      return launchOptions;
+    }
   });
 }

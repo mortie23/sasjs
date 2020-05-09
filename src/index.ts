@@ -1,14 +1,28 @@
+import 'isomorphic-fetch';
+import * as e6p from "es6-promise";
+(e6p as any).polyfill();
 export interface SASjsRequest {
   serviceLink: string;
   timestamp: Date;
   sourceCode: string;
   generatedCode: string;
   logFile: string;
+  SASWORK: any;
+}
+
+export interface SASjsWatingRequest {
+  requestPromise: {
+    promise: any;
+    resolve: any;
+    reject: any;
+  };
+  programName: string;
+  data: any;
+  params?: any;
 }
 
 export class SASjsConfig {
   serverUrl: string = "";
-  port: number | null = null;
   pathSAS9: string = "";
   pathSASViya: string = "";
   appLoc: string = "";
@@ -18,7 +32,6 @@ export class SASjsConfig {
 
 const defaultConfig: SASjsConfig = {
   serverUrl: "",
-  port: null,
   pathSAS9: "/SASStoredProcess/do",
   pathSASViya: "/SASJobExecution",
   appLoc: "/Public/seedapp",
@@ -41,6 +54,7 @@ export default class SASjs {
   private retryCount: number = 0;
   private retryLimit: number = 5;
   private sasjsRequests: SASjsRequest[] = [];
+  private sasjsWaitingRequests: SASjsWatingRequest[] = [];
   private userName: string = "";
 
   constructor(config?: any) {
@@ -65,6 +79,14 @@ export default class SASjs {
    */
   public getUserName() {
     return this.userName;
+  }
+
+  /**
+   * Returns the _csrf token of the current session.
+   *
+   */
+  public getCsrf() {
+    return this._csrf;
   }
 
   /**
@@ -118,6 +140,8 @@ export default class SASjs {
 
     const { isLoggedIn } = await this.checkSession();
     if (isLoggedIn) {
+      this.resendWaitingRequests();
+
       return Promise.resolve({
         isLoggedIn,
         userName: this.userName
@@ -134,16 +158,34 @@ export default class SASjs {
     return fetch(this.loginUrl, {
       method: "post",
       credentials: "include",
+      referrerPolicy: "same-origin",
       body: loginParamsStr,
       headers: new Headers({
         "Content-Type": "application/x-www-form-urlencoded"
       })
     })
       .then(response => response.text())
-      .then(responseText => ({
-        isLoggedIn: !this.isLogInRequired(responseText),
-        userName: this.userName
-      }))
+      .then(async responseText => {
+        let authFormRes: any;
+        let isLoggedIn;
+
+        if (this.isAuthorizeFormRequired(responseText)) {
+          authFormRes = await this.parseAndSubmitAuthorizeForm(responseText);
+          isLoggedIn = authFormRes.includes('Authentication success, retry original request');
+        } else {
+          isLoggedIn = this.isLogInSuccess(responseText);
+          if (!isLoggedIn) isLoggedIn = !this.isLogInRequired(responseText);
+        }
+
+        if (isLoggedIn) {
+          this.resendWaitingRequests();
+        }
+
+        return {
+          isLoggedIn: isLoggedIn,
+          userName: this.userName
+        };
+      })
       .catch(e => Promise.reject(e));
   }
 
@@ -167,7 +209,7 @@ export default class SASjs {
    * @param data - an object containing the data to be posted
    * @param params - an optional object with any additional parameters
    */
-  public async request(programName: string, data: any, params?: any) {
+  public async request(programName: string, data: any, params?: any, loginRequiredCallback?: any) {
     const program = this.appLoc
       ? this.appLoc.replace(/\/?$/, "/") + programName.replace(/^\//, "")
       : programName;
@@ -183,6 +225,7 @@ export default class SASjs {
 
     const formData = new FormData();
 
+    let logInRequired = false;
     let isError = false;
     let errorMsg = "";
 
@@ -244,104 +287,142 @@ export default class SASjs {
       }
     }
 
-    return new Promise((resolve, reject) => {
-      if (isError) {
-        reject({ MESSAGE: errorMsg });
-      }
-      fetch(apiUrl, {
-        method: "POST",
-        body: formData,
-        referrerPolicy: "same-origin"
-      })
-        .then(response => {
-          if (!response.ok) {
-            if (response.status === 403) {
-              const tokenHeader = response.headers.get("X-CSRF-HEADER");
+    let sasjsWaitingRequest: SASjsWatingRequest = {
+      requestPromise: {
+        promise: null,
+        resolve: null,
+        reject: null
+      },
+      programName: programName,
+      data: data,
+      params: params
+    };
 
-              if (tokenHeader) {
-                const token = response.headers.get(tokenHeader);
+    let isRedirected = false;
 
-                this._csrf = token;
+    sasjsWaitingRequest.requestPromise.promise = new Promise(
+       (resolve, reject) => {
+        if (isError) {
+          reject({ MESSAGE: errorMsg });
+        }
+         fetch(apiUrl, {
+          method: "POST",
+          body: formData,
+          referrerPolicy: "same-origin"
+        })
+          .then(async response => {
+            if (!response.ok) {
+              if (response.status === 403) {
+                const tokenHeader = response.headers.get("X-CSRF-HEADER");
+
+                if (tokenHeader) {
+                  const token = response.headers.get(tokenHeader);
+
+                  this._csrf = token;
+                }
               }
             }
-          }
 
-          if (response.redirected && this.sasjsConfig.serverType === "SAS9") {
-            return "redirected response - retry request";
-          }
+            if (response.redirected && this.sasjsConfig.serverType === "SAS9") {
+              isRedirected = true;
+            }
 
-          return response.text();
-        })
-        .then(responseText => {
-          if (this.needsRetry(responseText)) {
-            if (this.retryCount < this.retryLimit) {
-              this.retryCount++;
-              this.request(programName, data, params).then(
-                (res: any) => resolve(res),
-                (err: any) => reject(err)
-              );
+            return response.text();
+          })
+          .then(responseText => {
+            if (
+              (this.needsRetry(responseText) || isRedirected) &&
+              !this.isLogInRequired(responseText)
+            ) {
+              if (this.retryCount < this.retryLimit) {
+                this.retryCount++;
+                this.request(programName, data, params).then(
+                  (res: any) => resolve(res),
+                  (err: any) => reject(err)
+                );
+              } else {
+                this.retryCount = 0;
+                reject(responseText);
+              }
             } else {
               this.retryCount = 0;
-              reject(responseText);
-            }
-          } else {
-            this.retryCount = 0;
-            this.parseLogFromResponse(responseText, program);
+              this.parseLogFromResponse(responseText, program);
 
-            if (self.isLogInRequired(responseText)) {
-              reject(new Error("login required"));
-            } else {
-              if (
-                this.sasjsConfig.serverType === "SAS9" &&
-                this.sasjsConfig.debug
-              ) {
-                this.updateUsername(responseText);
-                const jsonResponseText = this.parseSAS9Response(responseText);
-
-                if (jsonResponseText !== "") {
-                  resolve(JSON.parse(jsonResponseText));
-                } else {
-                  reject({
-                    MESSAGE: this.parseSAS9ErrorResponse(responseText)
-                  });
-                }
-              } else if (
-                this.sasjsConfig.serverType === "SASVIYA" &&
-                this.sasjsConfig.debug
-              ) {
-                try {
-                  const json_url = responseText
-                    .split('<iframe style="width: 99%; height: 500px" src="')[1]
-                    .split('"></iframe>')[0];
-                  fetch(this.serverUrl + json_url)
-                    .then(res => res.text())
-                    .then(resText => {
-                      this.updateUsername(resText);
-                      try {
-                        resolve(JSON.parse(resText));
-                      } catch (e) {
-                        reject({ MESSAGE: resText });
-                      }
-                    });
-                } catch (e) {
-                  reject({ MESSAGE: responseText });
-                }
+              if (self.isLogInRequired(responseText)) {
+                if (loginRequiredCallback) loginRequiredCallback(true);
+                logInRequired = true;
+                sasjsWaitingRequest.requestPromise.resolve = resolve;
+                sasjsWaitingRequest.requestPromise.reject = reject;
+                this.sasjsWaitingRequests.push(sasjsWaitingRequest);
               } else {
-                this.updateUsername(responseText);
-                try {
-                  let parsedJson = JSON.parse(responseText);
-                  resolve(parsedJson);
-                } catch (e) {
-                  reject({ MESSAGE: responseText });
+                if (
+                  this.sasjsConfig.serverType === "SAS9" &&
+                  this.sasjsConfig.debug
+                ) {
+                  this.updateUsername(responseText);
+                  const jsonResponseText = this.parseSAS9Response(responseText);
+
+                  if (jsonResponseText !== "") {
+                    resolve(JSON.parse(jsonResponseText));
+                  } else {
+                    reject({
+                      MESSAGE: this.parseSAS9ErrorResponse(responseText)
+                    });
+                  }
+                } else if (
+                  this.sasjsConfig.serverType === "SASVIYA" &&
+                  this.sasjsConfig.debug
+                ) {
+                  try {
+                    this.parseSASVIYADebugResponse(responseText).then((resText: any) => {
+                      this.updateUsername(resText);
+                        try {
+                          resolve(JSON.parse(resText));
+                        } catch (e) {
+                          reject({ MESSAGE: resText });
+                        }
+                    }, (err: any) => {reject({ MESSAGE: err })});
+                  } catch (e) {
+                    reject({ MESSAGE: responseText });
+                  }
+                } else {
+                  this.updateUsername(responseText);
+                  try {
+                    let parsedJson = JSON.parse(responseText);
+                    resolve(parsedJson);
+                  } catch (e) {
+                    reject({ MESSAGE: responseText });
+                  }
                 }
               }
             }
-          }
-        })
-        .catch((e: Error) => {
-          reject(e);
-        });
-    });
+          })
+          .catch((e: Error) => {
+            reject(e);
+          });
+      }
+    );
+
+    return sasjsWaitingRequest.requestPromise.promise;
+  }
+
+  private async resendWaitingRequests() {
+    for (let sasjsWaitingRequest of this.sasjsWaitingRequests) {
+      this.request(
+        sasjsWaitingRequest.programName,
+        sasjsWaitingRequest.data,
+        sasjsWaitingRequest.params
+      ).then(
+        (res: any) => {
+          sasjsWaitingRequest.requestPromise.resolve(res);
+        },
+        (err: any) => {
+          sasjsWaitingRequest.requestPromise.reject(err);
+        }
+      );
+    }
+
+    this.sasjsWaitingRequests = [];
   }
 
   private needsRetry(responseText: string): boolean {
@@ -349,11 +430,10 @@ export default class SASjs {
       (responseText.includes('"errorCode":403') &&
         responseText.includes("_csrf") &&
         responseText.includes("X-CSRF-TOKEN")) ||
+        (responseText.includes('"status":403') &&
+        responseText.includes('"error":"Forbidden"')) ||
       (responseText.includes('"status":449') &&
-        responseText.includes(
-          "Authentication success, retry original request"
-        )) ||
-      responseText.includes("redirected response - retry request")
+        responseText.includes("Authentication success, retry original request"))
     );
   }
 
@@ -387,15 +467,39 @@ export default class SASjs {
     }
   }
 
+  private parseSASVIYADebugResponse(response: string) {
+    return new Promise((resolve, reject) => {
+      const iframe_start = response.split(
+        '<iframe style="width: 99%; height: 500px" src="'
+      )[1];
+      const json_url = iframe_start
+        ? iframe_start.split('"></iframe>')[0]
+        : null;
+
+      if (json_url) {
+        fetch(this.serverUrl + json_url)
+          .then(res => res.text())
+          .then(resText => {
+            resolve(resText);
+          });
+      } else {
+        reject("No debug info in response");
+      }
+    });
+  }
+
   private parseSAS9Response(response: string) {
     let sas9Response = "";
-    try {
-      sas9Response = response
-        .split(">>weboutBEGIN<<")[1]
-        .split(">>weboutEND<<")[0];
-    } catch (e) {
-      sas9Response = "";
-      console.error(e);
+
+    if (response.includes(">>weboutBEGIN<<")) {
+      try {
+        sas9Response = response
+          .split(">>weboutBEGIN<<")[1]
+          .split(">>weboutEND<<")[0];
+      } catch (e) {
+        sas9Response = "";
+        console.error(e);
+      }
     }
 
     return sas9Response;
@@ -446,26 +550,54 @@ export default class SASjs {
     });
   }
 
-  private appendSasjsRequest(log: any, program: string, pgmData: any) {
+  private async appendSasjsRequest(response: any, program: string, pgmData: any) {
     let sourceCode = "";
     let generatedCode = "";
+    let sasWork = null;
 
-    if (log) {
-      sourceCode = this.parseSourceCode(log);
-      generatedCode = this.parseGeneratedCode(log);
+    if (response) {
+      sourceCode = this.parseSourceCode(response);
+      generatedCode = this.parseGeneratedCode(response);
+      sasWork = await this.parseSasWork(response);
     }
 
     this.sasjsRequests.push({
-      logFile: log,
+      logFile: response,
       serviceLink: program,
       timestamp: new Date(),
       sourceCode,
-      generatedCode
+      generatedCode,
+      SASWORK: sasWork
     });
 
     if (this.sasjsRequests.length > 20) {
       this.sasjsRequests.splice(0, 1);
     }
+  }
+
+  private async parseSasWork(response: any) {
+    if (this.sasjsConfig.debug) {
+      let jsonResponse;
+
+      if (this.sasjsConfig.serverType === "SAS9") {
+        try {
+          jsonResponse = JSON.parse(this.parseSAS9Response(response));
+        } catch (e) {}
+      } else {
+        await this.parseSASVIYADebugResponse(response).then((resText: any) => {
+          try {
+            jsonResponse = JSON.parse(resText);
+          } catch (e) {}
+        }, (err: any) =>{
+          console.log(err);
+        });
+      }
+
+      if (jsonResponse) {
+        return jsonResponse.WORK;
+      }
+    }
+    return null;
   }
 
   private parseSourceCode(log: string) {
@@ -493,12 +625,19 @@ export default class SASjs {
   }
 
   private setupConfiguration() {
+    if (this.sasjsConfig.serverUrl === undefined || this.sasjsConfig.serverUrl === "") {
+      let url = `${location.protocol}//${location.hostname}`;
+      if (location.port) {
+        url = `${url}:${location.port}`;
+      }
+      this.sasjsConfig.serverUrl = url;
+    }
+
     if (this.sasjsConfig.serverUrl.slice(-1) === "/") {
       this.sasjsConfig.serverUrl = this.sasjsConfig.serverUrl.slice(0, -1);
     }
-    this.serverUrl = this.sasjsConfig.port
-      ? this.sasjsConfig.serverUrl + ":" + this.sasjsConfig.port
-      : this.sasjsConfig.serverUrl;
+
+    this.serverUrl = this.sasjsConfig.serverUrl;
     this.jobsPath =
       this.sasjsConfig.serverType === "SASVIYA"
         ? this.sasjsConfig.pathSASViya
@@ -540,6 +679,61 @@ export default class SASjs {
     return tempLoginLinkArray.join(".");
   };
 
+  public isAuthorizeFormRequired(response: any) {
+    return /<form.+action="(.*Logon\/oauth\/authorize[^"]*).*>/gm.test(
+      response
+    );
+  }
+
+  public async parseAndSubmitAuthorizeForm(response: any) {
+    let authUrl: string | null = null;
+    let params: any = {};
+
+    let responseBody = response.split("<body>")[1].split("</body>")[0];
+    let bodyElement = document.createElement("div");
+    bodyElement.innerHTML = responseBody;
+
+    let form = bodyElement.querySelector("#application_authorization");
+    authUrl = form
+      ? this.sasjsConfig.serverUrl + form.getAttribute("action")
+      : null;
+
+    let inputs: any = form?.querySelectorAll("input");
+
+    for (let input of inputs) {
+      if (input.name === "user_oauth_approval") {
+        input.value = "true";
+      }
+
+      params[input.name] = input.value;
+    }
+
+    let formData = new FormData();
+
+    for (const key in params) {
+      if (params.hasOwnProperty(key)) {
+        formData.append(key, params[key]);
+      }
+    }
+
+    return new Promise((resolve, reject) => {
+      if (authUrl) {
+        fetch(authUrl, {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+          referrerPolicy: "same-origin"
+        })
+          .then(res => res.text())
+          .then(res => {
+            resolve(res);
+          });
+      } else {
+        reject("Auth form url is null");
+      }
+    });
+  }
+
   private async getLoginForm() {
     const pattern: RegExp = /<form.+action="(.*Logon[^"]*).*>/;
     const response = await fetch(this.loginUrl).then(r => r.text());
@@ -559,11 +753,13 @@ export default class SASjs {
     }
     return Object.keys(formInputs).length ? formInputs : null;
   }
+    
+  private isLogInSuccess = (response: any) => /You have signed in/gm.test(response);
 
   private isLogInRequired = (response: any) => {
-    const pattern: RegExp = /<form.+action="(.*Logon[^"]*).*>/;
-    const matches = pattern.exec(response);
-    return !!(matches && matches.length);
+    const pattern: RegExp = /<form.+action="(.*Logon[^"]*).*>/gm;
+    const matches = pattern.test(response);
+    return matches;
   };
 }
 
@@ -694,6 +890,8 @@ function convertToCSV(data: any) {
       } else {
         value = JSON.stringify(currentCell, replacer);
       }
+
+      value = value.replace(/\\\\/gm, "\\");
 
       if (containsSpecialChar) {
         if (value.includes(",") || value.includes('"')) {

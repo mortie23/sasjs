@@ -87,4 +87,4 @@ parmcards4;
 %mv_createwebservice(path=/Public/app/common,name=sendArr,code=ft15f001,replace=YES)
 ```
 
-The above services will return anything you send.  To run the tests simply launch `npm run cypress` (you will need chrome installed first).
+The above services will return anything you send.  To run the tests simply launch `npm run cypress`.
