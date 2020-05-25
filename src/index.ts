@@ -119,7 +119,6 @@ export default class SASjs {
         createSessionRequest
       ).then((res) => res.json());
       // Execute job in session
-      console.log(JSON.stringify(createdSession, null, 2));
       const postJobRequest = {
         method: "POST",
         headers: {
@@ -136,9 +135,56 @@ export default class SASjs {
         `${this.sasjsConfig.serverUrl}/compute/sessions/${createdSession.id}/jobs`,
         postJobRequest
       ).then((res) => res.json());
+      console.log(`Job has been submitted for ${fileName}`);
 
-      return postedJob;
+      await this.pollJobState(postedJob, accessToken);
+      const logLink = postedJob.links.find((l: any) => l.rel === "log");
+      if (logLink) {
+        const log = await fetch(
+          `${this.sasjsConfig.serverUrl}${logLink.href}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        ).then((res) => res.text());
+        return log;
+      }
     }
+  }
+
+  private async pollJobState(postedJob: any, accessToken: string) {
+    let postedJobState = "";
+    let pollCount = 0;
+    const stateLink = postedJob.links.find((l: any) => l.rel === "state");
+    return new Promise((resolve, reject) => {
+      const interval = setInterval(async () => {
+        if (postedJobState !== "completed") {
+          if (stateLink) {
+            console.log("Polling job status... \n");
+            const jobState = await fetch(
+              `${this.sasjsConfig.serverUrl}${stateLink.href}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            ).then((res) => res.text());
+            postedJobState = jobState.trim();
+            console.log(`Current state: ${postedJobState}\n`);
+            pollCount++;
+            if (pollCount >= 100) {
+              resolve(postedJobState);
+            }
+          }
+        } else {
+          clearInterval(interval);
+          resolve(postedJobState);
+        }
+      }, 5000);
+    });
   }
 
   /**
