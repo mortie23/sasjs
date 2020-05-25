@@ -1,4 +1,4 @@
-import 'isomorphic-fetch';
+import "isomorphic-fetch";
 import * as e6p from "es6-promise";
 (e6p as any).polyfill();
 export interface SASjsRequest {
@@ -36,7 +36,7 @@ const defaultConfig: SASjsConfig = {
   pathSASViya: "/SASJobExecution",
   appLoc: "/Public/seedapp",
   serverType: "SASVIYA",
-  debug: true
+  debug: true,
 };
 
 /**
@@ -60,9 +60,85 @@ export default class SASjs {
   constructor(config?: any) {
     this.sasjsConfig = {
       ...defaultConfig,
-      ...config
+      ...config,
     };
     this.setupConfiguration();
+  }
+
+  public async executeScriptSAS9(
+    linesOfCode: string[],
+    serverName: string,
+    repositoryName: string
+  ) {
+    const requestPayload = linesOfCode.join("\n");
+    const executeScriptRequest = {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+      },
+      body: `command=${requestPayload}`,
+    };
+    const executeScriptResponse = await fetch(
+      `${this.sasjsConfig.serverUrl}/sas/servers/${serverName}/cmd?repositoryName=${repositoryName}`,
+      executeScriptRequest
+    ).then((res) => res.text());
+
+    return executeScriptResponse;
+  }
+
+  public async executeScriptSASViya(
+    fileName: string,
+    linesOfCode: string[],
+    contextName: string,
+    accessToken: string
+  ) {
+    const contexts = await fetch(
+      `${this.sasjsConfig.serverUrl}/compute/contexts`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    ).then((res) => res.json());
+    const executionContext = contexts.items.length
+      ? contexts.items.find((c: any) => c.name === contextName)
+      : null;
+
+    if (executionContext) {
+      // Request new session in context
+      const createSessionRequest = {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      };
+      const createdSession = await fetch(
+        `${this.sasjsConfig.serverUrl}/compute/contexts/${executionContext.id}/sessions`,
+        createSessionRequest
+      ).then((res) => res.json());
+      // Execute job in session
+      console.log(JSON.stringify(createdSession, null, 2));
+      const postJobRequest = {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: fileName,
+          description: "Powered by SASjs",
+          code: linesOfCode,
+        }),
+      };
+      const postedJob = await fetch(
+        `${this.sasjsConfig.serverUrl}/compute/sessions/${createdSession.id}/jobs`,
+        postJobRequest
+      ).then((res) => res.json());
+
+      return postedJob;
+    }
   }
 
   /**
@@ -96,7 +172,7 @@ export default class SASjs {
   public setSASjsConfig(config: SASjsConfig) {
     this.sasjsConfig = {
       ...this.sasjsConfig,
-      ...config
+      ...config,
     };
     this.setupConfiguration();
   }
@@ -120,7 +196,7 @@ export default class SASjs {
 
     return Promise.resolve({
       isLoggedIn: !isLoginRequired,
-      userName: this.userName
+      userName: this.userName,
     });
   }
 
@@ -133,7 +209,7 @@ export default class SASjs {
     const loginParams: any = {
       _service: "default",
       username,
-      password
+      password,
     };
 
     this.userName = loginParams.username;
@@ -144,7 +220,7 @@ export default class SASjs {
 
       return Promise.resolve({
         isLoggedIn,
-        userName: this.userName
+        userName: this.userName,
       });
     }
 
@@ -161,17 +237,19 @@ export default class SASjs {
       referrerPolicy: "same-origin",
       body: loginParamsStr,
       headers: new Headers({
-        "Content-Type": "application/x-www-form-urlencoded"
-      })
+        "Content-Type": "application/x-www-form-urlencoded",
+      }),
     })
-      .then(response => response.text())
-      .then(async responseText => {
+      .then((response) => response.text())
+      .then(async (responseText) => {
         let authFormRes: any;
         let isLoggedIn;
 
         if (this.isAuthorizeFormRequired(responseText)) {
           authFormRes = await this.parseAndSubmitAuthorizeForm(responseText);
-          isLoggedIn = authFormRes.includes('Authentication success, retry original request');
+          isLoggedIn = authFormRes.includes(
+            "Authentication success, retry original request"
+          );
         } else {
           isLoggedIn = this.isLogInSuccess(responseText);
           if (!isLoggedIn) isLoggedIn = !this.isLogInRequired(responseText);
@@ -183,10 +261,10 @@ export default class SASjs {
 
         return {
           isLoggedIn: isLoggedIn,
-          userName: this.userName
+          userName: this.userName,
         };
       })
-      .catch(e => Promise.reject(e));
+      .catch((e) => Promise.reject(e));
   }
 
   /**
@@ -209,7 +287,12 @@ export default class SASjs {
    * @param data - an object containing the data to be posted
    * @param params - an optional object with any additional parameters
    */
-  public async request(programName: string, data: any, params?: any, loginRequiredCallback?: any) {
+  public async request(
+    programName: string,
+    data: any,
+    params?: any,
+    loginRequiredCallback?: any
+  ) {
     const program = this.appLoc
       ? this.appLoc.replace(/\/?$/, "/") + programName.replace(/^\//, "")
       : programName;
@@ -218,7 +301,7 @@ export default class SASjs {
     const inputParams = params ? params : {};
     const requestParams = {
       ...inputParams,
-      ...this.getRequestParams()
+      ...this.getRequestParams(),
     };
 
     const self = this;
@@ -270,7 +353,7 @@ export default class SASjs {
           if (csv.length > 16000) {
             let csvChunks = splitChunks(csv);
             // append chunks to form data with same key
-            csvChunks.map(chunk => {
+            csvChunks.map((chunk) => {
               formData.append(`sasjs${tableCounter}data`, chunk);
             });
           } else {
@@ -291,26 +374,26 @@ export default class SASjs {
       requestPromise: {
         promise: null,
         resolve: null,
-        reject: null
+        reject: null,
       },
       programName: programName,
       data: data,
-      params: params
+      params: params,
     };
 
     let isRedirected = false;
 
     sasjsWaitingRequest.requestPromise.promise = new Promise(
-       (resolve, reject) => {
+      (resolve, reject) => {
         if (isError) {
           reject({ MESSAGE: errorMsg });
         }
-         fetch(apiUrl, {
+        fetch(apiUrl, {
           method: "POST",
           body: formData,
-          referrerPolicy: "same-origin"
+          referrerPolicy: "same-origin",
         })
-          .then(async response => {
+          .then(async (response) => {
             if (!response.ok) {
               if (response.status === 403) {
                 const tokenHeader = response.headers.get("X-CSRF-HEADER");
@@ -329,7 +412,7 @@ export default class SASjs {
 
             return response.text();
           })
-          .then(responseText => {
+          .then((responseText) => {
             if (
               (this.needsRetry(responseText) || isRedirected) &&
               !this.isLogInRequired(responseText)
@@ -366,7 +449,7 @@ export default class SASjs {
                     resolve(JSON.parse(jsonResponseText));
                   } else {
                     reject({
-                      MESSAGE: this.parseSAS9ErrorResponse(responseText)
+                      MESSAGE: this.parseSAS9ErrorResponse(responseText),
                     });
                   }
                 } else if (
@@ -374,14 +457,19 @@ export default class SASjs {
                   this.sasjsConfig.debug
                 ) {
                   try {
-                    this.parseSASVIYADebugResponse(responseText).then((resText: any) => {
-                      this.updateUsername(resText);
+                    this.parseSASVIYADebugResponse(responseText).then(
+                      (resText: any) => {
+                        this.updateUsername(resText);
                         try {
                           resolve(JSON.parse(resText));
                         } catch (e) {
                           reject({ MESSAGE: resText });
                         }
-                    }, (err: any) => {reject({ MESSAGE: err })});
+                      },
+                      (err: any) => {
+                        reject({ MESSAGE: err });
+                      }
+                    );
                   } catch (e) {
                     reject({ MESSAGE: responseText });
                   }
@@ -430,7 +518,7 @@ export default class SASjs {
       (responseText.includes('"errorCode":403') &&
         responseText.includes("_csrf") &&
         responseText.includes("X-CSRF-TOKEN")) ||
-        (responseText.includes('"status":403') &&
+      (responseText.includes('"status":403') &&
         responseText.includes('"error":"Forbidden"')) ||
       (responseText.includes('"status":449') &&
         responseText.includes("Authentication success, retry original request"))
@@ -478,8 +566,8 @@ export default class SASjs {
 
       if (json_url) {
         fetch(this.serverUrl + json_url)
-          .then(res => res.text())
-          .then(resText => {
+          .then((res) => res.text())
+          .then((resText) => {
             resolve(resText);
           });
       } else {
@@ -542,7 +630,7 @@ export default class SASjs {
   private fetchLogFileContent(logLink: string) {
     return new Promise((resolve, reject) => {
       fetch(logLink, {
-        method: "GET"
+        method: "GET",
       })
         .then((response: any) => response.text())
         .then((response: any) => resolve(response))
@@ -550,7 +638,11 @@ export default class SASjs {
     });
   }
 
-  private async appendSasjsRequest(response: any, program: string, pgmData: any) {
+  private async appendSasjsRequest(
+    response: any,
+    program: string,
+    pgmData: any
+  ) {
     let sourceCode = "";
     let generatedCode = "";
     let sasWork = null;
@@ -567,7 +659,7 @@ export default class SASjs {
       timestamp: new Date(),
       sourceCode,
       generatedCode,
-      SASWORK: sasWork
+      SASWORK: sasWork,
     });
 
     if (this.sasjsRequests.length > 20) {
@@ -584,13 +676,16 @@ export default class SASjs {
           jsonResponse = JSON.parse(this.parseSAS9Response(response));
         } catch (e) {}
       } else {
-        await this.parseSASVIYADebugResponse(response).then((resText: any) => {
-          try {
-            jsonResponse = JSON.parse(resText);
-          } catch (e) {}
-        }, (err: any) =>{
-          console.log(err);
-        });
+        await this.parseSASVIYADebugResponse(response).then(
+          (resText: any) => {
+            try {
+              jsonResponse = JSON.parse(resText);
+            } catch (e) {}
+          },
+          (err: any) => {
+            console.log(err);
+          }
+        );
       }
 
       if (jsonResponse) {
@@ -602,11 +697,7 @@ export default class SASjs {
 
   private parseSourceCode(log: string) {
     const isSourceCodeLine = (line: string) =>
-      line
-        .trim()
-        .substring(0, 10)
-        .trimStart()
-        .match(/^\d/);
+      line.trim().substring(0, 10).trimStart().match(/^\d/);
     const logLines = log.split("\n").filter(isSourceCodeLine);
     return logLines.join("\r\n");
   }
@@ -625,7 +716,10 @@ export default class SASjs {
   }
 
   private setupConfiguration() {
-    if (this.sasjsConfig.serverUrl === undefined || this.sasjsConfig.serverUrl === "") {
+    if (
+      this.sasjsConfig.serverUrl === undefined ||
+      this.sasjsConfig.serverUrl === ""
+    ) {
       let url = `${location.protocol}//${location.hostname}`;
       if (location.port) {
         url = `${url}:${location.port}`;
@@ -722,10 +816,10 @@ export default class SASjs {
           method: "POST",
           credentials: "include",
           body: formData,
-          referrerPolicy: "same-origin"
+          referrerPolicy: "same-origin",
         })
-          .then(res => res.text())
-          .then(res => {
+          .then((res) => res.text())
+          .then((res) => {
             resolve(res);
           });
       } else {
@@ -736,7 +830,7 @@ export default class SASjs {
 
   private async getLoginForm() {
     const pattern: RegExp = /<form.+action="(.*Logon[^"]*).*>/;
-    const response = await fetch(this.loginUrl).then(r => r.text());
+    const response = await fetch(this.loginUrl).then((r) => r.text());
     const matches = pattern.exec(response);
     const formInputs: any = {};
     if (matches && matches.length) {
@@ -753,8 +847,9 @@ export default class SASjs {
     }
     return Object.keys(formInputs).length ? formInputs : null;
   }
-    
-  private isLogInSuccess = (response: any) => /You have signed in/gm.test(response);
+
+  private isLogInSuccess = (response: any) =>
+    /You have signed in/gm.test(response);
 
   private isLogInRequired = (response: any) => {
     const pattern: RegExp = /<form.+action="(.*Logon[^"]*).*>/gm;
@@ -812,7 +907,7 @@ function convertToCSV(data: any) {
   const headerFields = Object.keys(data[0]);
   let csvTest;
   let invalidString = false;
-  const headers = headerFields.map(field => {
+  const headers = headerFields.map((field) => {
     let firstFoundType: string | null = null;
     let hasMixedTypes: boolean = false;
     let rowNumError: number = -1;
