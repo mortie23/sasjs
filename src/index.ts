@@ -136,6 +136,11 @@ export default class SASjs {
         postJobRequest
       ).then((res) => res.json());
       console.log(`Job has been submitted for ${fileName}`);
+      console.log(
+        `You can monitor the job progress at ${this.sasjsConfig.serverUrl}${
+          postedJob.links.find((l: any) => l.rel === "state").href
+        }`
+      );
 
       await this.pollJobState(postedJob, accessToken);
       const logLink = postedJob.links.find((l: any) => l.rel === "log");
@@ -183,7 +188,7 @@ export default class SASjs {
           clearInterval(interval);
           resolve(postedJobState);
         }
-      }, 5000);
+      }, 3000);
     });
   }
 
