@@ -165,7 +165,7 @@ export default class SASjs {
     const stateLink = postedJob.links.find((l: any) => l.rel === "state");
     return new Promise((resolve, reject) => {
       const interval = setInterval(async () => {
-        if (postedJobState !== "completed") {
+        if (postedJobState === "running" || postedJobState === "") {
           if (stateLink) {
             console.log("Polling job status... \n");
             const jobState = await fetch(
