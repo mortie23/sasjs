@@ -159,8 +159,9 @@ export default class SASjs {
       }
     } else {
       console.log(
-        "Unable to find execution context.\nPlease check the contextName in the tgtDeployVars and try again."
+        `Unable to find execution context ${contextName}.\nPlease check the contextName in the tgtDeployVars and try again.`
       );
+      console.log("Response from server: ", JSON.stringify(contexts));
     }
   }
 
