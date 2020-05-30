@@ -101,9 +101,10 @@ export default class SASjs {
         },
       }
     ).then((res) => res.json());
-    const executionContext = contexts.items.length
-      ? contexts.items.find((c: any) => c.name === contextName)
-      : null;
+    const executionContext =
+      contexts.items && contexts.items.length
+        ? contexts.items.find((c: any) => c.name === contextName)
+        : null;
 
     if (executionContext) {
       // Request new session in context
@@ -156,6 +157,10 @@ export default class SASjs {
         ).then((res) => res.text());
         return log;
       }
+    } else {
+      console.log(
+        "Unable to find execution context.\nPlease check the contextName in the tgtDeployVars and try again."
+      );
     }
   }
 
