@@ -147,7 +147,7 @@ export default class SASjs {
       const logLink = postedJob.links.find((l: any) => l.rel === "log");
       if (logLink) {
         const log = await fetch(
-          `${this.sasjsConfig.serverUrl}${logLink.href}`,
+          `${this.sasjsConfig.serverUrl}${logLink.href}?limit=100000`,
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,
