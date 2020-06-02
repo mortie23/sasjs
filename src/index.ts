@@ -171,7 +171,11 @@ export default class SASjs {
     const stateLink = postedJob.links.find((l: any) => l.rel === "state");
     return new Promise((resolve, reject) => {
       const interval = setInterval(async () => {
-        if (postedJobState === "running" || postedJobState === "" || postedJobState === "pending") {
+        if (
+          postedJobState === "running" ||
+          postedJobState === "" ||
+          postedJobState === "pending"
+        ) {
           if (stateLink) {
             console.log("Polling job status... \n");
             const jobState = await fetch(
@@ -196,6 +200,96 @@ export default class SASjs {
         }
       }, 3000);
     });
+  }
+
+  public async getAuthCode(clientId: string) {
+    const authUrl = `${this.sasjsConfig.serverUrl}/SASLogon/oauth/authorize?client_id=${clientId}&response_type=code`;
+
+    const authCode = await fetch(authUrl, {
+      referrerPolicy: "same-origin",
+      credentials: "include",
+    })
+      .then((response) => response.text())
+      .then((response) => {
+        let authcode: string = "";
+        const responseBody = response.split("<body>")[1].split("</body>")[0];
+        const bodyElement: any = document.createElement("div");
+        bodyElement.innerHTML = responseBody;
+
+        if (bodyElement) {
+          authcode = bodyElement.querySelector(".infobox h4").innerText;
+        }
+        return authcode;
+      })
+      .catch(() => null);
+
+    return authCode;
+  }
+
+  public async getAccessToken(
+    clientId: string,
+    clientSecret: string,
+    authCode: string
+  ) {
+    const url = this.sasjsConfig.serverUrl + "/SASLogon/oauth/token";
+    const headers = {
+      Authorization: "Basic " + btoa(clientId + ":" + clientSecret),
+    };
+
+    const formData = new FormData();
+    formData.append("grant_type", "authorization_code");
+    formData.append("code", authCode);
+
+    const authResponse = await fetch(url, {
+      method: "POST",
+      credentials: "include",
+      headers,
+      body: formData,
+      referrerPolicy: "same-origin",
+    }).then((res) => res.json());
+
+    return authResponse;
+  }
+
+  public async refreshTokens(
+    clientId: string,
+    clientSecret: string,
+    refreshToken: string
+  ) {
+    const url = this.sasjsConfig.serverUrl + "/SASLogon/oauth/token";
+    const headers = {
+      Authorization: "Basic " + btoa(clientId + ":" + clientSecret),
+    };
+
+    const formData = new FormData();
+    formData.append("grant_type", "refresh_token");
+    formData.append("refresh_token", refreshToken);
+
+    const authResponse = await fetch(url, {
+      method: "POST",
+      credentials: "include",
+      headers,
+      body: formData,
+      referrerPolicy: "same-origin",
+    }).then((res) => res.json());
+
+    return authResponse;
+  }
+
+  public async deleteClient(clientId: string, accessToken: string) {
+    const url = this.sasjsConfig.serverUrl + `/oauth/clients/${clientId}`;
+
+    const headers = {
+      Authorization: `Bearer ${accessToken}`,
+    };
+
+    const deleteResponse = await fetch(url, {
+      method: "DELETE",
+      credentials: "include",
+      headers,
+    }).then((res) => res.text());
+
+    return deleteResponse;
   }
 
   /**
