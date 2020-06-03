@@ -210,16 +210,34 @@ export default class SASjs {
       credentials: "include",
     })
       .then((response) => response.text())
-      .then((response) => {
-        let authcode: string = "";
-        const responseBody = response.split("<body>")[1].split("</body>")[0];
-        const bodyElement: any = document.createElement("div");
-        bodyElement.innerHTML = responseBody;
+      .then(async (response) => {
+        if (response.includes("Authorize Access")) {
+          let authcode = "";
+          let formResponse: any = await this.parseAndSubmitAuthorizeForm(
+            response
+          );
 
-        if (bodyElement) {
+          let responseBody = formResponse
+            .split("<body>")[1]
+            .split("</body>")[0];
+          let bodyElement: any = document.createElement("div");
+          bodyElement.innerHTML = responseBody;
+
           authcode = bodyElement.querySelector(".infobox h4").innerText;
+
+          return authcode;
+        } else {
+          let authCode: string = "";
+          const responseBody = response.split("<body>")[1].split("</body>")[0];
+          const bodyElement: any = document.createElement("div");
+          bodyElement.innerHTML = responseBody;
+
+          if (bodyElement) {
+            authCode = bodyElement.querySelector(".infobox h4").innerText;
+          }
+
+          return authCode;
         }
-        return authcode;
       })
       .catch(() => null);
 
