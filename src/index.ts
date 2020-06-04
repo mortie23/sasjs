@@ -127,10 +127,9 @@ export default class SASjs {
         accessToken
       ).catch(() => null);
       if (result && result.jobStatus === "completed") {
-        const log = JSON.parse(result.log);
         let sysUserId = "";
-        if (log.items) {
-          const sysUserIdLog = log.items.find((i: any) =>
+        if (result && result.log && result.log.items) {
+          const sysUserIdLog = result.log.items.find((i: any) =>
             i.line.startsWith("SYSUSERID=")
           );
           if (sysUserIdLog) {
@@ -221,7 +220,7 @@ export default class SASjs {
               "Content-Type": "application/json",
             },
           }
-        ).then((res) => res.text());
+        ).then((res) => res.json());
         return { jobStatus, log };
       }
     } else {
