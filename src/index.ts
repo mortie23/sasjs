@@ -86,6 +86,50 @@ export default class SASjs {
     return executeScriptResponse;
   }
 
+  public async getExecutableContexts(accessToken: string) {
+    const contexts = await fetch(
+      `${this.sasjsConfig.serverUrl}/compute/contexts`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    ).then((res) => res.json());
+    const contextsList = contexts && contexts.items ? contexts.items : [];
+    const executableContexts: any[] = [];
+    await asyncForEach(contextsList, async (context: any) => {
+      const linesOfCode = ["%put &=sysuserid;"];
+      const result = await this.executeScriptSASViya(
+        `test-${context.name}`,
+        linesOfCode,
+        context.name,
+        accessToken
+      ).catch(() => null);
+      if (result && result.jobStatus === "completed") {
+        const log = JSON.parse(result.log);
+        let sysUserId = "";
+        if (log.items) {
+          const sysUserIdLog = log.items.find((i: any) =>
+            i.line.startsWith("SYSUSERID=")
+          );
+          if (sysUserIdLog) {
+            sysUserId = sysUserIdLog.line.replace("SYSUSERID=", "");
+          }
+        }
+        executableContexts.push({
+          createdBy: context.createdBy,
+          id: context.id,
+          name: context.name,
+          version: context.version,
+          sysUserId,
+        });
+      }
+    });
+
+    return executableContexts;
+  }
+
   public async executeScriptSASViya(
     fileName: string,
     linesOfCode: string[],
@@ -143,7 +187,7 @@ export default class SASjs {
         }`
       );
 
-      await this.pollJobState(postedJob, accessToken);
+      const jobStatus = await this.pollJobState(postedJob, accessToken);
       const logLink = postedJob.links.find((l: any) => l.rel === "log");
       if (logLink) {
         const log = await fetch(
@@ -155,7 +199,7 @@ export default class SASjs {
             },
           }
         ).then((res) => res.text());
-        return log;
+        return { jobStatus, log };
       }
     } else {
       console.log(
@@ -1188,4 +1232,10 @@ function convertToCSV(data: any) {
     headers.join(",").replace(/,/g, " ") + "\r\n" + csvTest.join("\r\n");
 
   return finalCSV;
+}
+
+async function asyncForEach(array: any[], callback: any) {
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array);
+  }
 }
