@@ -117,6 +117,7 @@ export default class SASjs {
             sysUserId = sysUserIdLog.line.replace("SYSUSERID=", "");
           }
         }
+
         executableContexts.push({
           createdBy: context.createdBy,
           id: context.id,
