@@ -86,6 +86,25 @@ export default class SASjs {
     return executeScriptResponse;
   }
 
+  public async getAllContexts(accessToken: string) {
+    const contexts = await fetch(
+      `${this.sasjsConfig.serverUrl}/compute/contexts`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    ).then((res) => res.json());
+    const contextsList = contexts && contexts.items ? contexts.items : [];
+    return contextsList.map((context: any) => ({
+      createdBy: context.createdBy,
+      id: context.id,
+      name: context.name,
+      version: context.version,
+    }));
+  }
+
   public async getExecutableContexts(accessToken: string) {
     const contexts = await fetch(
       `${this.sasjsConfig.serverUrl}/compute/contexts`,
