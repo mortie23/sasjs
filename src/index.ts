@@ -102,6 +102,7 @@ export default class SASjs {
       id: context.id,
       name: context.name,
       version: context.version,
+      attributes: {},
     }));
   }
 
@@ -142,7 +143,9 @@ export default class SASjs {
           id: context.id,
           name: context.name,
           version: context.version,
-          sysUserId,
+          attributes: {
+            sysUserId,
+          },
         });
       }
     });
