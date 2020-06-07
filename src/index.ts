@@ -1,6 +1,8 @@
 import "isomorphic-fetch";
 import * as e6p from "es6-promise";
 (e6p as any).polyfill();
+import * as NodeFormData from "form-data";
+
 export interface SASjsRequest {
   serviceLink: string;
   timestamp: Date;
@@ -316,19 +318,32 @@ export default class SASjs {
     authCode: string
   ) {
     const url = this.sasjsConfig.serverUrl + "/SASLogon/oauth/token";
+    let token;
+    if (typeof Buffer === "undefined") {
+      token = btoa(clientId + ":" + clientSecret);
+    } else {
+      token = Buffer.from(clientId + ":" + clientSecret).toString("base64");
+    }
     const headers = {
-      Authorization: "Basic " + btoa(clientId + ":" + clientSecret),
+      Authorization: "Basic " + token,
     };
 
-    const formData = new FormData();
-    formData.append("grant_type", "authorization_code");
-    formData.append("code", authCode);
+    let formData;
+    if (typeof FormData === "undefined") {
+      formData = new NodeFormData();
+      formData.append("grant_type", "authorization_code");
+      formData.append("code", authCode);
+    } else {
+      formData = new FormData();
+      formData.append("grant_type", "authorization_code");
+      formData.append("code", authCode);
+    }
 
     const authResponse = await fetch(url, {
       method: "POST",
       credentials: "include",
       headers,
-      body: formData,
+      body: formData as any,
       referrerPolicy: "same-origin",
     }).then((res) => res.json());
 
@@ -341,19 +356,32 @@ export default class SASjs {
     refreshToken: string
   ) {
     const url = this.sasjsConfig.serverUrl + "/SASLogon/oauth/token";
+    let token;
+    if (typeof Buffer === "undefined") {
+      token = btoa(clientId + ":" + clientSecret);
+    } else {
+      token = Buffer.from(clientId + ":" + clientSecret).toString("base64");
+    }
     const headers = {
-      Authorization: "Basic " + btoa(clientId + ":" + clientSecret),
+      Authorization: "Basic " + token,
     };
 
-    const formData = new FormData();
-    formData.append("grant_type", "refresh_token");
-    formData.append("refresh_token", refreshToken);
+    let formData;
+    if (typeof FormData === "undefined") {
+      formData = new NodeFormData();
+      formData.append("grant_type", "refresh_token");
+      formData.append("refresh_token", refreshToken);
+    } else {
+      formData = new FormData();
+      formData.append("grant_type", "refresh_token");
+      formData.append("refresh_token", refreshToken);
+    }
 
     const authResponse = await fetch(url, {
       method: "POST",
       credentials: "include",
       headers,
-      body: formData,
+      body: formData as any,
       referrerPolicy: "same-origin",
     }).then((res) => res.json());
 
