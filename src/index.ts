@@ -23,11 +23,6 @@ export interface SASjsWatingRequest {
   params?: any;
 }
 
-interface AuthData {
-  access_token: string | null;
-  table_name: string;
-}
-
 export class SASjsConfig {
   serverUrl: string = "";
   pathSAS9: string = "";
@@ -58,15 +53,13 @@ export default class SASjs {
   private logoutUrl: string = "";
   private loginUrl: string = "";
   private _csrf: string | null = null;
+  private access_token: string | null = null;
   private retryCount: number = 0;
   private retryLimit: number = 5;
   private sasjsRequests: SASjsRequest[] = [];
   private sasjsWaitingRequests: SASjsWatingRequest[] = [];
   private userName: string = "";
-  private authData: AuthData = {
-    access_token: null,
-    table_name: 'accesstoken'
-  }
+  
 
   constructor(config?: any) {
     this.sasjsConfig = {
@@ -76,12 +69,8 @@ export default class SASjs {
     this.setupConfiguration();
   }
 
-  public setAccessToken(token: string, token_table_name?: string) {
-    this.authData.access_token = token;
-
-    if (token_table_name) {
-      this.authData.table_name = token_table_name;
-    }
+  public setAccessToken(token: string) {
+    this.access_token = token;
   }
 
   public async executeScriptSAS9(
@@ -586,11 +575,8 @@ export default class SASjs {
 
     const self = this;
 
-    if (self.sasjsConfig.serverType === 'SASVIYA' && self.authData.access_token !== null) {
-      let sessionVars = [{access_token: self.authData.access_token}];
-
-      if (!data) data = {};
-      data[self.authData.table_name] = sessionVars;
+    if (self.sasjsConfig.serverType === 'SASVIYA' && self.access_token !== null) {
+      requestParams['access_token'] = self.access_token;
     }
 
     const formData = new FormData();
