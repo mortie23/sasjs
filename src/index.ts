@@ -279,7 +279,7 @@ export default class SASjs {
     })
       .then((response) => response.text())
       .then(async (response) => {
-        if (response.includes("Authorize Access")) {
+        if (this.isAuthorizeFormRequired(response)) {
           let authcode = "";
           let formResponse: any = await this.parseAndSubmitAuthorizeForm(
             response
