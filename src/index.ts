@@ -76,9 +76,12 @@ export default class SASjs {
     this.setupConfiguration();
   }
 
-  public setAccessToken(token: string, token_table_name: string) {
+  public setAccessToken(token: string, token_table_name?: string) {
     this.authData.access_token = token;
-    this.authData.table_name = token_table_name;
+
+    if (token_table_name) {
+      this.authData.table_name = token_table_name;
+    }
   }
 
   public async executeScriptSAS9(
