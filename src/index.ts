@@ -1006,7 +1006,7 @@ export default class SASjs {
       this.sasjsConfig.serverUrl = this.sasjsConfig.serverUrl.slice(0, -1);
     }
 
-    if (this.sasjsConfig.serverType === "") this.detectServerType();
+    if (["", undefined].includes(this.sasjsConfig.serverType)) this.detectServerType();
 
     this.serverUrl = this.sasjsConfig.serverUrl;
     this.jobsPath =
