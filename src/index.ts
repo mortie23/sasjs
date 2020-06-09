@@ -37,7 +37,7 @@ const defaultConfig: SASjsConfig = {
   pathSAS9: "/SASStoredProcess/do",
   pathSASViya: "/SASJobExecution",
   appLoc: "/Public/seedapp",
-  serverType: "SASVIYA",
+  serverType: "",
   debug: true,
 };
 
@@ -65,7 +65,18 @@ export default class SASjs {
       ...defaultConfig,
       ...config,
     };
+
     this.setupConfiguration();
+  }
+
+  public detectServerType() {
+    let viyaApi = this.sasjsConfig.serverUrl + '/reports/reports?limit=1';
+
+    fetch(viyaApi)
+    .then((res: any) => {
+      this.sasjsConfig.serverType = res.status === 404 ? 'SAS9' : 'SASVIYA';
+      console.log('Server type detected:', this.sasjsConfig.serverType);
+    });
   }
 
   public async executeScriptSAS9(
@@ -994,6 +1005,8 @@ export default class SASjs {
     if (this.sasjsConfig.serverUrl.slice(-1) === "/") {
       this.sasjsConfig.serverUrl = this.sasjsConfig.serverUrl.slice(0, -1);
     }
+
+    if (this.sasjsConfig.serverType === "") this.detectServerType();
 
     this.serverUrl = this.sasjsConfig.serverUrl;
     this.jobsPath =
