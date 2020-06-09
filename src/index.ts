@@ -53,7 +53,6 @@ export default class SASjs {
   private logoutUrl: string = "";
   private loginUrl: string = "";
   private _csrf: string | null = null;
-  private access_token: string | null = null;
   private retryCount: number = 0;
   private retryLimit: number = 5;
   private sasjsRequests: SASjsRequest[] = [];
@@ -67,10 +66,6 @@ export default class SASjs {
       ...config,
     };
     this.setupConfiguration();
-  }
-
-  public setAccessToken(token: string) {
-    this.access_token = token;
   }
 
   public async executeScriptSAS9(
@@ -574,10 +569,6 @@ export default class SASjs {
     };
 
     const self = this;
-
-    if (self.sasjsConfig.serverType === 'SASVIYA' && self.access_token !== null) {
-      requestParams['access_token'] = self.access_token;
-    }
 
     const formData = new FormData();
 
