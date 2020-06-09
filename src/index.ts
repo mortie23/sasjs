@@ -37,7 +37,7 @@ const defaultConfig: SASjsConfig = {
   pathSAS9: "/SASStoredProcess/do",
   pathSASViya: "/SASJobExecution",
   appLoc: "/Public/seedapp",
-  serverType: "",
+  serverType: "AUTODETECT",
   debug: true,
 };
 
@@ -1006,7 +1006,7 @@ export default class SASjs {
       this.sasjsConfig.serverUrl = this.sasjsConfig.serverUrl.slice(0, -1);
     }
 
-    if (["", undefined].includes(this.sasjsConfig.serverType)) this.detectServerType();
+    if (this.sasjsConfig.serverType !== 'SASVIYA' && this.sasjsConfig.serverType !== 'SAS9') this.detectServerType();
 
     this.serverUrl = this.sasjsConfig.serverUrl;
     this.jobsPath =
