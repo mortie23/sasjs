@@ -58,7 +58,6 @@ export default class SASjs {
   private sasjsRequests: SASjsRequest[] = [];
   private sasjsWaitingRequests: SASjsWatingRequest[] = [];
   private userName: string = "";
-  
 
   constructor(config?: any) {
     this.sasjsConfig = {
@@ -71,16 +70,17 @@ export default class SASjs {
 
   public async detectServerType() {
     return new Promise((resolve, reject) => {
-      let viyaApi = this.sasjsConfig.serverUrl + '/reports/reports?limit=1';
+      let viyaApi = this.sasjsConfig.serverUrl + "/reports/reports?limit=1";
 
       fetch(viyaApi)
-      .then((res: any) => {
-        this.sasjsConfig.serverType = res.status === 404 ? 'SAS9' : 'SASVIYA';
-        console.log('Server type detected:', this.sasjsConfig.serverType);
-        resolve();
-      }).catch((err: any) => {
-        reject(err);
-      })
+        .then((res: any) => {
+          this.sasjsConfig.serverType = res.status === 404 ? "SAS9" : "SASVIYA";
+          console.log("Server type detected:", this.sasjsConfig.serverType);
+          resolve();
+        })
+        .catch((err: any) => {
+          reject(err);
+        });
     });
   }
 
@@ -171,11 +171,45 @@ export default class SASjs {
     return executableContexts;
   }
 
+  public async createSession(contextName: string, accessToken: string) {
+    const contexts = await fetch(
+      `${this.sasjsConfig.serverUrl}/compute/contexts`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    ).then((res) => res.json());
+    const executionContext =
+      contexts.items && contexts.items.length
+        ? contexts.items.find((c: any) => c.name === contextName)
+        : null;
+    if (!executionContext) {
+      throw new Error(`Execution context ${contextName} not found.`);
+    }
+
+    const createSessionRequest = {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    };
+    const createdSession = await fetch(
+      `${this.sasjsConfig.serverUrl}/compute/contexts/${executionContext.id}/sessions`,
+      createSessionRequest
+    ).then((res) => res.json());
+
+    return createdSession;
+  }
+
   public async executeScriptSASViya(
     fileName: string,
     linesOfCode: string[],
     contextName: string,
-    accessToken: string
+    accessToken: string,
+    sessionId = ""
   ) {
     const contexts = await fetch(
       `${this.sasjsConfig.serverUrl}/compute/contexts`,
@@ -192,18 +226,24 @@ export default class SASjs {
         : null;
 
     if (executionContext) {
-      // Request new session in context
-      const createSessionRequest = {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      };
-      const createdSession = await fetch(
-        `${this.sasjsConfig.serverUrl}/compute/contexts/${executionContext.id}/sessions`,
-        createSessionRequest
-      ).then((res) => res.json());
+      // Request new session in context or use the ID passed in
+      let executionSessionId;
+      if (sessionId) {
+        executionSessionId = sessionId;
+      } else {
+        const createSessionRequest = {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        };
+        const createdSession = await fetch(
+          `${this.sasjsConfig.serverUrl}/compute/contexts/${executionContext.id}/sessions`,
+          createSessionRequest
+        ).then((res) => res.json());
+        executionSessionId = createdSession.id;
+      }
       // Execute job in session
       const postJobRequest = {
         method: "POST",
@@ -218,7 +258,7 @@ export default class SASjs {
         }),
       };
       const postedJob = await fetch(
-        `${this.sasjsConfig.serverUrl}/compute/sessions/${createdSession.id}/jobs`,
+        `${this.sasjsConfig.serverUrl}/compute/sessions/${executionSessionId}/jobs`,
         postJobRequest
       ).then((res) => res.json());
       console.log(`Job has been submitted for ${fileName}`);
@@ -1011,7 +1051,11 @@ export default class SASjs {
       this.sasjsConfig.serverUrl = this.sasjsConfig.serverUrl.slice(0, -1);
     }
 
-    if (this.sasjsConfig.serverType !== 'SASVIYA' && this.sasjsConfig.serverType !== 'SAS9') await this.detectServerType();
+    if (
+      this.sasjsConfig.serverType !== "SASVIYA" &&
+      this.sasjsConfig.serverType !== "SAS9"
+    )
+      await this.detectServerType();
 
     this.serverUrl = this.sasjsConfig.serverUrl;
     this.jobsPath =
