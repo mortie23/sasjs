@@ -69,13 +69,18 @@ export default class SASjs {
     this.setupConfiguration();
   }
 
-  public detectServerType() {
-    let viyaApi = this.sasjsConfig.serverUrl + '/reports/reports?limit=1';
+  public async detectServerType() {
+    return new Promise((resolve, reject) => {
+      let viyaApi = this.sasjsConfig.serverUrl + '/reports/reports?limit=1';
 
-    fetch(viyaApi)
-    .then((res: any) => {
-      this.sasjsConfig.serverType = res.status === 404 ? 'SAS9' : 'SASVIYA';
-      console.log('Server type detected:', this.sasjsConfig.serverType);
+      fetch(viyaApi)
+      .then((res: any) => {
+        this.sasjsConfig.serverType = res.status === 404 ? 'SAS9' : 'SASVIYA';
+        console.log('Server type detected:', this.sasjsConfig.serverType);
+        resolve();
+      }).catch((err: any) => {
+        reject(err);
+      })
     });
   }
 
@@ -444,12 +449,12 @@ export default class SASjs {
    * Sets the SASjs configuration.
    * @param config - SASjsConfig indicating SASjs Configuration
    */
-  public setSASjsConfig(config: SASjsConfig) {
+  public async setSASjsConfig(config: SASjsConfig) {
     this.sasjsConfig = {
       ...this.sasjsConfig,
       ...config,
     };
-    this.setupConfiguration();
+    await this.setupConfiguration();
   }
 
   /**
@@ -990,7 +995,7 @@ export default class SASjs {
     return sortedRequests;
   }
 
-  private setupConfiguration() {
+  private async setupConfiguration() {
     if (
       this.sasjsConfig.serverUrl === undefined ||
       this.sasjsConfig.serverUrl === ""
@@ -1006,7 +1011,7 @@ export default class SASjs {
       this.sasjsConfig.serverUrl = this.sasjsConfig.serverUrl.slice(0, -1);
     }
 
-    if (this.sasjsConfig.serverType !== 'SASVIYA' && this.sasjsConfig.serverType !== 'SAS9') this.detectServerType();
+    if (this.sasjsConfig.serverType !== 'SASVIYA' && this.sasjsConfig.serverType !== 'SAS9') await this.detectServerType();
 
     this.serverUrl = this.sasjsConfig.serverUrl;
     this.jobsPath =
