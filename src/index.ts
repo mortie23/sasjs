@@ -465,7 +465,13 @@ export default class SASjs {
    * Returns the current SASjs configuration.
    *
    */
-  public getSasjsConfig() {
+  public async getSasjsConfig() {
+    if (
+      this.sasjsConfig.serverType !== "SASVIYA" &&
+      this.sasjsConfig.serverType !== "SAS9"
+    ) {
+      await this.detectServerType();
+    }
     return this.sasjsConfig;
   }
 
