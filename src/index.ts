@@ -532,6 +532,8 @@ export default class SASjs {
    * @param password - a string representing the password
    */
   public async logIn(username: string, password: string) {
+    await this.logOut();
+
     const loginParams: any = {
       _service: "default",
       username,
