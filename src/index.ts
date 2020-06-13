@@ -619,6 +619,12 @@ export default class SASjs {
     params?: any,
     loginRequiredCallback?: any
   ) {
+    if (
+      this.sasjsConfig.serverType !== "SASVIYA" &&
+      this.sasjsConfig.serverType !== "SAS9"
+    ) {
+      await this.detectServerType();
+    }
     const program = this.appLoc
       ? this.appLoc.replace(/\/?$/, "/") + programName.replace(/^\//, "")
       : programName;
@@ -1041,7 +1047,7 @@ export default class SASjs {
     return sortedRequests;
   }
 
-  private async setupConfiguration() {
+  private setupConfiguration() {
     if (
       this.sasjsConfig.serverUrl === undefined ||
       this.sasjsConfig.serverUrl === ""
@@ -1056,12 +1062,6 @@ export default class SASjs {
     if (this.sasjsConfig.serverUrl.slice(-1) === "/") {
       this.sasjsConfig.serverUrl = this.sasjsConfig.serverUrl.slice(0, -1);
     }
-
-    if (
-      this.sasjsConfig.serverType !== "SASVIYA" &&
-      this.sasjsConfig.serverType !== "SAS9"
-    )
-      await this.detectServerType();
 
     this.serverUrl = this.sasjsConfig.serverUrl;
     this.jobsPath =
