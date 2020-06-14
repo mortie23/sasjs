@@ -75,6 +75,10 @@ export default class SASjs {
       fetch(viyaApi)
         .then((res: any) => {
           this.sasjsConfig.serverType = res.status === 404 ? "SAS9" : "SASVIYA";
+          this.jobsPath =
+            this.sasjsConfig.serverType === "SASVIYA"
+              ? this.sasjsConfig.pathSASViya
+              : this.sasjsConfig.pathSAS9;
           console.log("Server type detected:", this.sasjsConfig.serverType);
           resolve();
         })
