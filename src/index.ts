@@ -1,6 +1,8 @@
-import 'isomorphic-fetch';
+import "isomorphic-fetch";
 import * as e6p from "es6-promise";
 (e6p as any).polyfill();
+import * as NodeFormData from "form-data";
+
 export interface SASjsRequest {
   serviceLink: string;
   timestamp: Date;
@@ -35,8 +37,8 @@ const defaultConfig: SASjsConfig = {
   pathSAS9: "/SASStoredProcess/do",
   pathSASViya: "/SASJobExecution",
   appLoc: "/Public/seedapp",
-  serverType: "SASVIYA",
-  debug: true
+  serverType: "AUTODETECT",
+  debug: true,
 };
 
 /**
@@ -60,16 +62,420 @@ export default class SASjs {
   constructor(config?: any) {
     this.sasjsConfig = {
       ...defaultConfig,
-      ...config
+      ...config,
     };
+
     this.setupConfiguration();
+  }
+
+  public async detectServerType() {
+    return new Promise((resolve, reject) => {
+      let viyaApi = this.sasjsConfig.serverUrl + "/reports/reports?limit=1";
+
+      fetch(viyaApi)
+        .then((res: any) => {
+          this.sasjsConfig.serverType = res.status === 404 ? "SAS9" : "SASVIYA";
+          this.jobsPath =
+            this.sasjsConfig.serverType === "SASVIYA"
+              ? this.sasjsConfig.pathSASViya
+              : this.sasjsConfig.pathSAS9;
+          console.log("Server type detected:", this.sasjsConfig.serverType);
+          resolve();
+        })
+        .catch((err: any) => {
+          reject(err);
+        });
+    });
+  }
+
+  public async executeScriptSAS9(
+    linesOfCode: string[],
+    serverName: string,
+    repositoryName: string
+  ) {
+    const requestPayload = linesOfCode.join("\n");
+    const executeScriptRequest = {
+      method: "PUT",
+      headers: {
+        Accept: "application/json",
+      },
+      body: `command=${requestPayload}`,
+    };
+    const executeScriptResponse = await fetch(
+      `${this.sasjsConfig.serverUrl}/sas/servers/${serverName}/cmd?repositoryName=${repositoryName}`,
+      executeScriptRequest
+    ).then((res) => res.text());
+
+    return executeScriptResponse;
+  }
+
+  public async getAllContexts(accessToken: string) {
+    const contexts = await fetch(
+      `${this.sasjsConfig.serverUrl}/compute/contexts`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    ).then((res) => res.json());
+    const contextsList = contexts && contexts.items ? contexts.items : [];
+    return contextsList.map((context: any) => ({
+      createdBy: context.createdBy,
+      id: context.id,
+      name: context.name,
+      version: context.version,
+      attributes: {},
+    }));
+  }
+
+  public async getExecutableContexts(accessToken: string) {
+    const contexts = await fetch(
+      `${this.sasjsConfig.serverUrl}/compute/contexts`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    ).then((res) => res.json());
+    const contextsList = contexts && contexts.items ? contexts.items : [];
+    const executableContexts: any[] = [];
+    await asyncForEach(contextsList, async (context: any) => {
+      const linesOfCode = ["%put &=sysuserid;"];
+      const result = await this.executeScriptSASViya(
+        `test-${context.name}`,
+        linesOfCode,
+        context.name,
+        accessToken
+      ).catch(() => null);
+      if (result && result.jobStatus === "completed") {
+        let sysUserId = "";
+        if (result && result.log && result.log.items) {
+          const sysUserIdLog = result.log.items.find((i: any) =>
+            i.line.startsWith("SYSUSERID=")
+          );
+          if (sysUserIdLog) {
+            sysUserId = sysUserIdLog.line.replace("SYSUSERID=", "");
+          }
+        }
+
+        executableContexts.push({
+          createdBy: context.createdBy,
+          id: context.id,
+          name: context.name,
+          version: context.version,
+          attributes: {
+            sysUserId,
+          },
+        });
+      }
+    });
+
+    return executableContexts;
+  }
+
+  public async createSession(contextName: string, accessToken: string) {
+    const contexts = await fetch(
+      `${this.sasjsConfig.serverUrl}/compute/contexts`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    ).then((res) => res.json());
+    const executionContext =
+      contexts.items && contexts.items.length
+        ? contexts.items.find((c: any) => c.name === contextName)
+        : null;
+    if (!executionContext) {
+      throw new Error(`Execution context ${contextName} not found.`);
+    }
+
+    const createSessionRequest = {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    };
+    const createdSession = await fetch(
+      `${this.sasjsConfig.serverUrl}/compute/contexts/${executionContext.id}/sessions`,
+      createSessionRequest
+    ).then((res) => res.json());
+
+    return createdSession;
+  }
+
+  public async executeScriptSASViya(
+    fileName: string,
+    linesOfCode: string[],
+    contextName: string,
+    accessToken: string,
+    sessionId = ""
+  ) {
+    const contexts = await fetch(
+      `${this.sasjsConfig.serverUrl}/compute/contexts`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    ).then((res) => res.json());
+    const executionContext =
+      contexts.items && contexts.items.length
+        ? contexts.items.find((c: any) => c.name === contextName)
+        : null;
+
+    if (executionContext) {
+      // Request new session in context or use the ID passed in
+      let executionSessionId;
+      if (sessionId) {
+        executionSessionId = sessionId;
+      } else {
+        const createSessionRequest = {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        };
+        const createdSession = await fetch(
+          `${this.sasjsConfig.serverUrl}/compute/contexts/${executionContext.id}/sessions`,
+          createSessionRequest
+        ).then((res) => res.json());
+        executionSessionId = createdSession.id;
+      }
+      // Execute job in session
+      const postJobRequest = {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: fileName,
+          description: "Powered by SASjs",
+          code: linesOfCode,
+        }),
+      };
+      const postedJob = await fetch(
+        `${this.sasjsConfig.serverUrl}/compute/sessions/${executionSessionId}/jobs`,
+        postJobRequest
+      ).then((res) => res.json());
+      console.log(`Job has been submitted for ${fileName}`);
+      console.log(
+        `You can monitor the job progress at ${this.sasjsConfig.serverUrl}${
+          postedJob.links.find((l: any) => l.rel === "state").href
+        }`
+      );
+
+      const jobStatus = await this.pollJobState(postedJob, accessToken);
+      const logLink = postedJob.links.find((l: any) => l.rel === "log");
+      if (logLink) {
+        const log = await fetch(
+          `${this.sasjsConfig.serverUrl}${logLink.href}?limit=100000`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        ).then((res) => res.json());
+        return { jobStatus, log };
+      }
+    } else {
+      console.log(
+        `Unable to find execution context ${contextName}.\nPlease check the contextName in the tgtDeployVars and try again.`
+      );
+      console.log("Response from server: ", JSON.stringify(contexts));
+    }
+  }
+
+  private async pollJobState(postedJob: any, accessToken: string) {
+    let postedJobState = "";
+    let pollCount = 0;
+    const stateLink = postedJob.links.find((l: any) => l.rel === "state");
+    return new Promise((resolve, reject) => {
+      const interval = setInterval(async () => {
+        if (
+          postedJobState === "running" ||
+          postedJobState === "" ||
+          postedJobState === "pending"
+        ) {
+          if (stateLink) {
+            console.log("Polling job status... \n");
+            const jobState = await fetch(
+              `${this.sasjsConfig.serverUrl}${stateLink.href}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            ).then((res) => res.text());
+            postedJobState = jobState.trim();
+            console.log(`Current state: ${postedJobState}\n`);
+            pollCount++;
+            if (pollCount >= 100) {
+              resolve(postedJobState);
+            }
+          }
+        } else {
+          clearInterval(interval);
+          resolve(postedJobState);
+        }
+      }, 3000);
+    });
+  }
+
+  public async getAuthCode(clientId: string) {
+    const authUrl = `${this.sasjsConfig.serverUrl}/SASLogon/oauth/authorize?client_id=${clientId}&response_type=code`;
+
+    const authCode = await fetch(authUrl, {
+      referrerPolicy: "same-origin",
+      credentials: "include",
+    })
+      .then((response) => response.text())
+      .then(async (response) => {
+        if (this.isAuthorizeFormRequired(response)) {
+          let authcode = "";
+          let formResponse: any = await this.parseAndSubmitAuthorizeForm(
+            response
+          );
+
+          let responseBody = formResponse
+            .split("<body>")[1]
+            .split("</body>")[0];
+          let bodyElement: any = document.createElement("div");
+          bodyElement.innerHTML = responseBody;
+
+          authcode = bodyElement.querySelector(".infobox h4").innerText;
+
+          return authcode;
+        } else {
+          let authCode: string = "";
+          const responseBody = response.split("<body>")[1].split("</body>")[0];
+          const bodyElement: any = document.createElement("div");
+          bodyElement.innerHTML = responseBody;
+
+          if (bodyElement) {
+            authCode = bodyElement.querySelector(".infobox h4").innerText;
+          }
+
+          return authCode;
+        }
+      })
+      .catch(() => null);
+
+    return authCode;
+  }
+
+  public async getAccessToken(
+    clientId: string,
+    clientSecret: string,
+    authCode: string
+  ) {
+    const url = this.sasjsConfig.serverUrl + "/SASLogon/oauth/token";
+    let token;
+    if (typeof Buffer === "undefined") {
+      token = btoa(clientId + ":" + clientSecret);
+    } else {
+      token = Buffer.from(clientId + ":" + clientSecret).toString("base64");
+    }
+    const headers = {
+      Authorization: "Basic " + token,
+    };
+
+    let formData;
+    if (typeof FormData === "undefined") {
+      formData = new NodeFormData();
+      formData.append("grant_type", "authorization_code");
+      formData.append("code", authCode);
+    } else {
+      formData = new FormData();
+      formData.append("grant_type", "authorization_code");
+      formData.append("code", authCode);
+    }
+
+    const authResponse = await fetch(url, {
+      method: "POST",
+      credentials: "include",
+      headers,
+      body: formData as any,
+      referrerPolicy: "same-origin",
+    }).then((res) => res.json());
+
+    return authResponse;
+  }
+
+  public async refreshTokens(
+    clientId: string,
+    clientSecret: string,
+    refreshToken: string
+  ) {
+    const url = this.sasjsConfig.serverUrl + "/SASLogon/oauth/token";
+    let token;
+    if (typeof Buffer === "undefined") {
+      token = btoa(clientId + ":" + clientSecret);
+    } else {
+      token = Buffer.from(clientId + ":" + clientSecret).toString("base64");
+    }
+    const headers = {
+      Authorization: "Basic " + token,
+    };
+
+    let formData;
+    if (typeof FormData === "undefined") {
+      formData = new NodeFormData();
+      formData.append("grant_type", "refresh_token");
+      formData.append("refresh_token", refreshToken);
+    } else {
+      formData = new FormData();
+      formData.append("grant_type", "refresh_token");
+      formData.append("refresh_token", refreshToken);
+    }
+
+    const authResponse = await fetch(url, {
+      method: "POST",
+      credentials: "include",
+      headers,
+      body: formData as any,
+      referrerPolicy: "same-origin",
+    }).then((res) => res.json());
+
+    return authResponse;
+  }
+
+  public async deleteClient(clientId: string, accessToken: string) {
+    const url = this.sasjsConfig.serverUrl + `/oauth/clients/${clientId}`;
+
+    const headers = {
+      Authorization: `Bearer ${accessToken}`,
+    };
+
+    const deleteResponse = await fetch(url, {
+      method: "DELETE",
+      credentials: "include",
+      headers,
+    }).then((res) => res.text());
+
+    return deleteResponse;
   }
 
   /**
    * Returns the current SASjs configuration.
    *
    */
-  public getSasjsConfig() {
+  public async getSasjsConfig() {
+    if (
+      this.sasjsConfig.serverType !== "SASVIYA" &&
+      this.sasjsConfig.serverType !== "SAS9"
+    ) {
+      await this.detectServerType();
+    }
     return this.sasjsConfig;
   }
 
@@ -82,15 +488,23 @@ export default class SASjs {
   }
 
   /**
+   * Returns the _csrf token of the current session.
+   *
+   */
+  public getCsrf() {
+    return this._csrf;
+  }
+
+  /**
    * Sets the SASjs configuration.
    * @param config - SASjsConfig indicating SASjs Configuration
    */
-  public setSASjsConfig(config: SASjsConfig) {
+  public async setSASjsConfig(config: SASjsConfig) {
     this.sasjsConfig = {
       ...this.sasjsConfig,
-      ...config
+      ...config,
     };
-    this.setupConfiguration();
+    await this.setupConfiguration();
   }
 
   /**
@@ -112,7 +526,7 @@ export default class SASjs {
 
     return Promise.resolve({
       isLoggedIn: !isLoginRequired,
-      userName: this.userName
+      userName: this.userName,
     });
   }
 
@@ -122,10 +536,12 @@ export default class SASjs {
    * @param password - a string representing the password
    */
   public async logIn(username: string, password: string) {
+    await this.logOut();
+
     const loginParams: any = {
       _service: "default",
       username,
-      password
+      password,
     };
 
     this.userName = loginParams.username;
@@ -136,7 +552,7 @@ export default class SASjs {
 
       return Promise.resolve({
         isLoggedIn,
-        userName: this.userName
+        userName: this.userName,
       });
     }
 
@@ -150,19 +566,22 @@ export default class SASjs {
     return fetch(this.loginUrl, {
       method: "post",
       credentials: "include",
+      referrerPolicy: "same-origin",
       body: loginParamsStr,
       headers: new Headers({
-        "Content-Type": "application/x-www-form-urlencoded"
-      })
+        "Content-Type": "application/x-www-form-urlencoded",
+      }),
     })
-      .then(response => response.text())
-      .then(async responseText => {
+      .then((response) => response.text())
+      .then(async (responseText) => {
         let authFormRes: any;
         let isLoggedIn;
 
         if (this.isAuthorizeFormRequired(responseText)) {
           authFormRes = await this.parseAndSubmitAuthorizeForm(responseText);
-          isLoggedIn = authFormRes.includes('Authentication success, retry original request');
+          isLoggedIn = authFormRes.includes(
+            "Authentication success, retry original request"
+          );
         } else {
           isLoggedIn = this.isLogInSuccess(responseText);
           if (!isLoggedIn) isLoggedIn = !this.isLogInRequired(responseText);
@@ -174,10 +593,10 @@ export default class SASjs {
 
         return {
           isLoggedIn: isLoggedIn,
-          userName: this.userName
+          userName: this.userName,
         };
       })
-      .catch(e => Promise.reject(e));
+      .catch((e) => Promise.reject(e));
   }
 
   /**
@@ -200,7 +619,18 @@ export default class SASjs {
    * @param data - an object containing the data to be posted
    * @param params - an optional object with any additional parameters
    */
-  public async request(programName: string, data: any, params?: any, loginRequiredCallback?: any) {
+  public async request(
+    programName: string,
+    data: any,
+    params?: any,
+    loginRequiredCallback?: any
+  ) {
+    if (
+      this.sasjsConfig.serverType !== "SASVIYA" &&
+      this.sasjsConfig.serverType !== "SAS9"
+    ) {
+      await this.detectServerType();
+    }
     const program = this.appLoc
       ? this.appLoc.replace(/\/?$/, "/") + programName.replace(/^\//, "")
       : programName;
@@ -209,7 +639,7 @@ export default class SASjs {
     const inputParams = params ? params : {};
     const requestParams = {
       ...inputParams,
-      ...this.getRequestParams()
+      ...this.getRequestParams(),
     };
 
     const self = this;
@@ -261,7 +691,7 @@ export default class SASjs {
           if (csv.length > 16000) {
             let csvChunks = splitChunks(csv);
             // append chunks to form data with same key
-            csvChunks.map(chunk => {
+            csvChunks.map((chunk) => {
               formData.append(`sasjs${tableCounter}data`, chunk);
             });
           } else {
@@ -282,26 +712,26 @@ export default class SASjs {
       requestPromise: {
         promise: null,
         resolve: null,
-        reject: null
+        reject: null,
       },
       programName: programName,
       data: data,
-      params: params
+      params: params,
     };
 
     let isRedirected = false;
 
     sasjsWaitingRequest.requestPromise.promise = new Promise(
-       (resolve, reject) => {
+      (resolve, reject) => {
         if (isError) {
           reject({ MESSAGE: errorMsg });
         }
-         fetch(apiUrl, {
+        fetch(apiUrl, {
           method: "POST",
           body: formData,
-          referrerPolicy: "same-origin"
+          referrerPolicy: "same-origin",
         })
-          .then(async response => {
+          .then(async (response) => {
             if (!response.ok) {
               if (response.status === 403) {
                 const tokenHeader = response.headers.get("X-CSRF-HEADER");
@@ -320,7 +750,7 @@ export default class SASjs {
 
             return response.text();
           })
-          .then(responseText => {
+          .then((responseText) => {
             if (
               (this.needsRetry(responseText) || isRedirected) &&
               !this.isLogInRequired(responseText)
@@ -357,7 +787,7 @@ export default class SASjs {
                     resolve(JSON.parse(jsonResponseText));
                   } else {
                     reject({
-                      MESSAGE: this.parseSAS9ErrorResponse(responseText)
+                      MESSAGE: this.parseSAS9ErrorResponse(responseText),
                     });
                   }
                 } else if (
@@ -365,14 +795,19 @@ export default class SASjs {
                   this.sasjsConfig.debug
                 ) {
                   try {
-                    this.parseSASVIYADebugResponse(responseText).then((resText: any) => {
-                      this.updateUsername(resText);
+                    this.parseSASVIYADebugResponse(responseText).then(
+                      (resText: any) => {
+                        this.updateUsername(resText);
                         try {
                           resolve(JSON.parse(resText));
                         } catch (e) {
                           reject({ MESSAGE: resText });
                         }
-                    }, (err: any) => {reject({ MESSAGE: err })});
+                      },
+                      (err: any) => {
+                        reject({ MESSAGE: err });
+                      }
+                    );
                   } catch (e) {
                     reject({ MESSAGE: responseText });
                   }
@@ -421,7 +856,7 @@ export default class SASjs {
       (responseText.includes('"errorCode":403') &&
         responseText.includes("_csrf") &&
         responseText.includes("X-CSRF-TOKEN")) ||
-        (responseText.includes('"status":403') &&
+      (responseText.includes('"status":403') &&
         responseText.includes('"error":"Forbidden"')) ||
       (responseText.includes('"status":449') &&
         responseText.includes("Authentication success, retry original request"))
@@ -469,8 +904,8 @@ export default class SASjs {
 
       if (json_url) {
         fetch(this.serverUrl + json_url)
-          .then(res => res.text())
-          .then(resText => {
+          .then((res) => res.text())
+          .then((resText) => {
             resolve(resText);
           });
       } else {
@@ -533,7 +968,7 @@ export default class SASjs {
   private fetchLogFileContent(logLink: string) {
     return new Promise((resolve, reject) => {
       fetch(logLink, {
-        method: "GET"
+        method: "GET",
       })
         .then((response: any) => response.text())
         .then((response: any) => resolve(response))
@@ -541,7 +976,11 @@ export default class SASjs {
     });
   }
 
-  private async appendSasjsRequest(response: any, program: string, pgmData: any) {
+  private async appendSasjsRequest(
+    response: any,
+    program: string,
+    pgmData: any
+  ) {
     let sourceCode = "";
     let generatedCode = "";
     let sasWork = null;
@@ -558,7 +997,7 @@ export default class SASjs {
       timestamp: new Date(),
       sourceCode,
       generatedCode,
-      SASWORK: sasWork
+      SASWORK: sasWork,
     });
 
     if (this.sasjsRequests.length > 20) {
@@ -575,13 +1014,16 @@ export default class SASjs {
           jsonResponse = JSON.parse(this.parseSAS9Response(response));
         } catch (e) {}
       } else {
-        await this.parseSASVIYADebugResponse(response).then((resText: any) => {
-          try {
-            jsonResponse = JSON.parse(resText);
-          } catch (e) {}
-        }, (err: any) =>{
-          console.log(err);
-        });
+        await this.parseSASVIYADebugResponse(response).then(
+          (resText: any) => {
+            try {
+              jsonResponse = JSON.parse(resText);
+            } catch (e) {}
+          },
+          (err: any) => {
+            console.log(err);
+          }
+        );
       }
 
       if (jsonResponse) {
@@ -593,11 +1035,7 @@ export default class SASjs {
 
   private parseSourceCode(log: string) {
     const isSourceCodeLine = (line: string) =>
-      line
-        .trim()
-        .substring(0, 10)
-        .trimStart()
-        .match(/^\d/);
+      line.trim().substring(0, 10).trimStart().match(/^\d/);
     const logLines = log.split("\n").filter(isSourceCodeLine);
     return logLines.join("\r\n");
   }
@@ -616,8 +1054,15 @@ export default class SASjs {
   }
 
   private setupConfiguration() {
-    if (this.sasjsConfig.serverUrl === undefined || this.sasjsConfig.serverUrl === "") {
-      this.sasjsConfig.serverUrl = `${location.protocol}//${location.hostname}:${location.port}`;
+    if (
+      this.sasjsConfig.serverUrl === undefined ||
+      this.sasjsConfig.serverUrl === ""
+    ) {
+      let url = `${location.protocol}//${location.hostname}`;
+      if (location.port) {
+        url = `${url}:${location.port}`;
+      }
+      this.sasjsConfig.serverUrl = url;
     }
 
     if (this.sasjsConfig.serverUrl.slice(-1) === "/") {
@@ -709,10 +1154,10 @@ export default class SASjs {
           method: "POST",
           credentials: "include",
           body: formData,
-          referrerPolicy: "same-origin"
+          referrerPolicy: "same-origin",
         })
-          .then(res => res.text())
-          .then(res => {
+          .then((res) => res.text())
+          .then((res) => {
             resolve(res);
           });
       } else {
@@ -723,7 +1168,7 @@ export default class SASjs {
 
   private async getLoginForm() {
     const pattern: RegExp = /<form.+action="(.*Logon[^"]*).*>/;
-    const response = await fetch(this.loginUrl).then(r => r.text());
+    const response = await fetch(this.loginUrl).then((r) => r.text());
     const matches = pattern.exec(response);
     const formInputs: any = {};
     if (matches && matches.length) {
@@ -740,8 +1185,9 @@ export default class SASjs {
     }
     return Object.keys(formInputs).length ? formInputs : null;
   }
-    
-  private isLogInSuccess = (response: any) => /You have signed in/gm.test(response);
+
+  private isLogInSuccess = (response: any) =>
+    /You have signed in/gm.test(response);
 
   private isLogInRequired = (response: any) => {
     const pattern: RegExp = /<form.+action="(.*Logon[^"]*).*>/gm;
@@ -799,7 +1245,7 @@ function convertToCSV(data: any) {
   const headerFields = Object.keys(data[0]);
   let csvTest;
   let invalidString = false;
-  const headers = headerFields.map(field => {
+  const headers = headerFields.map((field) => {
     let firstFoundType: string | null = null;
     let hasMixedTypes: boolean = false;
     let rowNumError: number = -1;
@@ -911,4 +1357,10 @@ function convertToCSV(data: any) {
     headers.join(",").replace(/,/g, " ") + "\r\n" + csvTest.join("\r\n");
 
   return finalCSV;
+}
+
+async function asyncForEach(array: any[], callback: any) {
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array);
+  }
 }
