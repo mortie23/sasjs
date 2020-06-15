@@ -60,7 +60,7 @@ Ok ok.  Deploy the following HTML:
 The backend part can be deployed as follows:
 
 ```
-%let appLoc=/Public/app;  /* Configure Metadata or Viya Folder location here */
+%let appLoc=/Public/app/readme;  /* Metadata or Viya Folder location as per SASjs config */
 filename mc url "https://raw.githubusercontent.com/macropeople/macrocore/master/mc_all.sas";
 %inc mc; /* compile macros */
 filename ft15f001 temp;
@@ -77,3 +77,9 @@ parmcards4;
 ;;;;
 %mp_createwebservice(path=&appLoc/common,name=getdata)
 ```
+
+You now have a simple web app with a backend service!
+
+# More resources
+
+Checkout this [link](https://sasjs.io/training/resources/) or contact the [author](https://www.linkedin.com/in/allanbowe/) directly.
