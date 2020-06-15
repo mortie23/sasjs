@@ -27,7 +27,9 @@ Ok ok.  Deploy the following HTML:
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/combine/npm/chart.js@2.9.3,npm/jquery@3.5.1,npm/sasjs@2.12.4"></script> 
     <script>
-      var sasJs = new SASjs.default({appLoc: "/Products/demo/readme",serverType:"SAS9", debug: "false"});
+      var sasJs = new SASjs.default({appLoc: "/Products/demo/readme"
+        ,serverType:"SAS9", debug: "false"
+      });
       function initSasJs() {
         $('#loading-spinner').show()
         // instantiate sasjs with options such as backend app location
@@ -43,7 +45,6 @@ Ok ok.  Deploy the following HTML:
           }
         })
       }
-
       function getData(){
         $('#loading-spinner').show()
         $('#myChart').remove();
@@ -62,7 +63,6 @@ Ok ok.  Deploy the following HTML:
           initGraph(labels, data, type);
         })
       }
-
       function initGraph(labels, data, type){
         var myCanvas = document.getElementById("myChart");
         var ctx = myCanvas.getContext("2d");
@@ -82,17 +82,10 @@ Ok ok.  Deploy the following HTML:
             },
             options: {
                 maintainAspectRatio: false,
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            beginAtZero: true
-                        }
-                    }]
-                }
+                scales: {yAxes: [{ticks: {beginAtZero: true}}]}
             }
         });
       }
-      
     </script>
   </head>
   <body>
@@ -117,12 +110,10 @@ Ok ok.  Deploy the following HTML:
             <option value="Truck">Truck</option>
             <option value="Wagon">Wagon</option>
           </select>
-          <button id="getdata" onclick="getData()" style="margin-bottom: 5px; display: none;" class="btn btn-success">Get Data</button>
-          <br><br>
+          <button id="getdata" onclick="getData()" style="margin-bottom: 5px; display: none;" class="btn btn-success">Get Data</button><br><br>
           <div id="loading-spinner" class="spinner-border text-primary" role="status" style="display: none;">
             <span class="sr-only">Loading...</span>
-          </div>
-          <br>
+          </div><br>
         </div>
       </div>
     </div>
