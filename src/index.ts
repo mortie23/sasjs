@@ -121,14 +121,20 @@ export default class SASjs {
     ).then((res) => res.json());
     const contextsList = contexts && contexts.items ? contexts.items : [];
     const executableContexts: any[] = [];
-    await asyncForEach(contextsList, async (context: any) => {
+
+    const promises = contextsList.map((context: any) => {
       const linesOfCode = ["%put &=sysuserid;"];
-      const result = await this.executeScriptSASViya(
+      return this.executeScriptSASViya(
         `test-${context.name}`,
         linesOfCode,
         context.name,
-        accessToken
+        accessToken,
+        undefined,
+        true
       ).catch(() => null);
+    });
+    const results = await Promise.all(promises);
+    results.forEach((result: any, index: number) => {
       if (result && result.jobStatus === "completed") {
         let sysUserId = "";
         if (result && result.log && result.log.items) {
@@ -141,10 +147,10 @@ export default class SASjs {
         }
 
         executableContexts.push({
-          createdBy: context.createdBy,
-          id: context.id,
-          name: context.name,
-          version: context.version,
+          createdBy: contextsList[index].createdBy,
+          id: contextsList[index].id,
+          name: contextsList[index].name,
+          version: contextsList[index].version,
           attributes: {
             sysUserId,
           },
@@ -193,7 +199,8 @@ export default class SASjs {
     linesOfCode: string[],
     contextName: string,
     accessToken: string,
-    sessionId = ""
+    sessionId = "",
+    silent = false
   ) {
     const contexts = await fetch(
       `${this.sasjsConfig.serverUrl}/compute/contexts`,
@@ -245,14 +252,16 @@ export default class SASjs {
         `${this.sasjsConfig.serverUrl}/compute/sessions/${executionSessionId}/jobs`,
         postJobRequest
       ).then((res) => res.json());
-      console.log(`Job has been submitted for ${fileName}`);
-      console.log(
-        `You can monitor the job progress at ${this.sasjsConfig.serverUrl}${
-          postedJob.links.find((l: any) => l.rel === "state").href
-        }`
-      );
+      if (!silent) {
+        console.log(`Job has been submitted for ${fileName}`);
+        console.log(
+          `You can monitor the job progress at ${this.sasjsConfig.serverUrl}${
+            postedJob.links.find((l: any) => l.rel === "state").href
+          }`
+        );
+      }
 
-      const jobStatus = await this.pollJobState(postedJob, accessToken);
+      const jobStatus = await this.pollJobState(postedJob, accessToken, silent);
       const logLink = postedJob.links.find((l: any) => l.rel === "log");
       if (logLink) {
         const log = await fetch(
@@ -267,14 +276,18 @@ export default class SASjs {
         return { jobStatus, log };
       }
     } else {
-      console.log(
+      console.error(
         `Unable to find execution context ${contextName}.\nPlease check the contextName in the tgtDeployVars and try again.`
       );
-      console.log("Response from server: ", JSON.stringify(contexts));
+      console.error("Response from server: ", JSON.stringify(contexts));
     }
   }
 
-  private async pollJobState(postedJob: any, accessToken: string) {
+  private async pollJobState(
+    postedJob: any,
+    accessToken: string,
+    silent = false
+  ) {
     let postedJobState = "";
     let pollCount = 0;
     const stateLink = postedJob.links.find((l: any) => l.rel === "state");
@@ -286,7 +299,9 @@ export default class SASjs {
           postedJobState === "pending"
         ) {
           if (stateLink) {
-            console.log("Polling job status... \n");
+            if (!silent) {
+              console.log("Polling job status... \n");
+            }
             const jobState = await fetch(
               `${this.sasjsConfig.serverUrl}${stateLink.href}`,
               {
@@ -297,7 +312,9 @@ export default class SASjs {
               }
             ).then((res) => res.text());
             postedJobState = jobState.trim();
-            console.log(`Current state: ${postedJobState}\n`);
+            if (!silent) {
+              console.log(`Current state: ${postedJobState}\n`);
+            }
             pollCount++;
             if (pollCount >= 100) {
               resolve(postedJobState);
@@ -1060,7 +1077,7 @@ export default class SASjs {
 
       let loginUrl = tempLoginLink;
 
-      this.loginUrl = loginUrl.replace('.do', '');
+      this.loginUrl = loginUrl.replace(".do", "");
     }
   };
 
