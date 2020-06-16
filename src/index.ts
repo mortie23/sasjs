@@ -1053,13 +1053,7 @@ export default class SASjs {
     return sortedRequests;
   }
 
-  private async setupConfiguration() {
-    if (
-      this.sasjsConfig.serverType !== "SASVIYA" &&
-      this.sasjsConfig.serverType !== "SAS9"
-    ) {
-      await this.detectServerType();
-    }
+  private setupConfiguration() {
     if (
       this.sasjsConfig.serverUrl === undefined ||
       this.sasjsConfig.serverUrl === ""
