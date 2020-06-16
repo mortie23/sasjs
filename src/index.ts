@@ -1054,7 +1054,12 @@ export default class SASjs {
   }
 
   private async setupConfiguration() {
-    await this.detectServerType();
+    if (
+      this.sasjsConfig.serverType !== "SASVIYA" &&
+      this.sasjsConfig.serverType !== "SAS9"
+    ) {
+      await this.detectServerType();
+    }
     if (
       this.sasjsConfig.serverUrl === undefined ||
       this.sasjsConfig.serverUrl === ""
