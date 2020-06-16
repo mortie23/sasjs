@@ -522,10 +522,10 @@ export default class SASjs {
   public async checkSession() {
     const loginResponse = await fetch(this.loginUrl);
     const responseText = await loginResponse.text();
-    const isLoginRequired = this.isLogInRequired(responseText);
+    const isLoggedIn = /You have signed in./gm.test(responseText);
 
     return Promise.resolve({
-      isLoggedIn: !isLoginRequired,
+      isLoggedIn: isLoggedIn,
       userName: this.userName,
     });
   }
@@ -536,8 +536,6 @@ export default class SASjs {
    * @param password - a string representing the password
    */
   public async logIn(username: string, password: string) {
-    await this.logOut();
-
     const loginParams: any = {
       _service: "default",
       username,
@@ -579,12 +577,13 @@ export default class SASjs {
 
         if (this.isAuthorizeFormRequired(responseText)) {
           authFormRes = await this.parseAndSubmitAuthorizeForm(responseText);
-          isLoggedIn = authFormRes.includes(
-            "Authentication success, retry original request"
-          );
         } else {
           isLoggedIn = this.isLogInSuccess(responseText);
-          if (!isLoggedIn) isLoggedIn = !this.isLogInRequired(responseText);
+        }
+
+        if (!isLoggedIn) {
+          let currentSession = await this.checkSession();
+          isLoggedIn = currentSession.isLoggedIn;
         }
 
         if (isLoggedIn) {
@@ -1092,23 +1091,9 @@ export default class SASjs {
         : `${parsedURL}`;
 
       let loginUrl = tempLoginLink;
-      if (this.sasjsConfig.serverType === "SAS9") {
-        loginUrl = this.getSas9LoginUrl(tempLoginLink);
-      }
 
-      this.loginUrl = loginUrl;
+      this.loginUrl = loginUrl.replace('.do', '');
     }
-  };
-
-  private getSas9LoginUrl = (loginUrl: string) => {
-    const tempLoginLinkArray = loginUrl.split(".");
-    const doIndex = tempLoginLinkArray.indexOf("do");
-
-    if (doIndex > -1) {
-      tempLoginLinkArray.splice(doIndex, 1);
-    }
-
-    return tempLoginLinkArray.join(".");
   };
 
   public isAuthorizeFormRequired(response: any) {
