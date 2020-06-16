@@ -37,7 +37,7 @@ const defaultConfig: SASjsConfig = {
   pathSAS9: "/SASStoredProcess/do",
   pathSASViya: "/SASJobExecution",
   appLoc: "/Public/seedapp",
-  serverType: "AUTODETECT",
+  serverType: "SASVIYA",
   debug: true,
 };
 
@@ -66,26 +66,6 @@ export default class SASjs {
     };
 
     this.setupConfiguration();
-  }
-
-  public async detectServerType() {
-    return new Promise((resolve, reject) => {
-      let viyaApi = this.sasjsConfig.serverUrl + "/reports/reports?limit=1";
-
-      fetch(viyaApi)
-        .then((res: any) => {
-          this.sasjsConfig.serverType = res.status === 404 ? "SAS9" : "SASVIYA";
-          this.jobsPath =
-            this.sasjsConfig.serverType === "SASVIYA"
-              ? this.sasjsConfig.pathSASViya
-              : this.sasjsConfig.pathSAS9;
-          console.log("Server type detected:", this.sasjsConfig.serverType);
-          resolve();
-        })
-        .catch((err: any) => {
-          reject(err);
-        });
-    });
   }
 
   public async executeScriptSAS9(
@@ -469,13 +449,7 @@ export default class SASjs {
    * Returns the current SASjs configuration.
    *
    */
-  public async getSasjsConfig() {
-    if (
-      this.sasjsConfig.serverType !== "SASVIYA" &&
-      this.sasjsConfig.serverType !== "SAS9"
-    ) {
-      await this.detectServerType();
-    }
+  public getSasjsConfig() {
     return this.sasjsConfig;
   }
 
@@ -624,12 +598,6 @@ export default class SASjs {
     params?: any,
     loginRequiredCallback?: any
   ) {
-    if (
-      this.sasjsConfig.serverType !== "SASVIYA" &&
-      this.sasjsConfig.serverType !== "SAS9"
-    ) {
-      await this.detectServerType();
-    }
     const program = this.appLoc
       ? this.appLoc.replace(/\/?$/, "/") + programName.replace(/^\//, "")
       : programName;
