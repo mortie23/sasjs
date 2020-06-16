@@ -511,7 +511,7 @@ export default class SASjs {
    * @returns a promise which resolves with an object containing two values - a boolean `isLoggedIn`, and a string `userName`
    */
   public async checkSession() {
-    const loginResponse = await fetch(this.loginUrl);
+    const loginResponse = await fetch(this.loginUrl.replace('.do', ''));
     const responseText = await loginResponse.text();
     const isLoggedIn = /You have signed in./gm.test(responseText);
 
@@ -1077,7 +1077,7 @@ export default class SASjs {
 
       let loginUrl = tempLoginLink;
 
-      this.loginUrl = loginUrl.replace(".do", "");
+      this.loginUrl = this.sasjsConfig.serverType === 'SASVIYA' ? tempLoginLink : loginUrl.replace(".do", "");
     }
   };
 
