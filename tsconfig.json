@@ -10,10 +10,15 @@
   },
   "include": ["src"],
   "exclude": ["node_modules", "**/*.spec.ts"],
-  "typedocOptions":{
-    "inputFiles":["./src"],
-    "mode":"modules",
-    "out":"docs",
-    "ignoreCompilerErrors":true
+  "typedocOptions": {
+    "out": "docs",
+    "theme": "./node_modules/typedoc-neo-theme/bin/default",
+    "outline": [
+      {
+        "API Documentation": {
+          "Overview": "/kriaco/sasjs-docs/globals"
+        }
+      }
+    ]
   }
 }
