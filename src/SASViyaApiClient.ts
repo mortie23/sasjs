@@ -1,9 +1,17 @@
 import { isAuthorizeFormRequired, parseAndSubmitAuthorizeForm } from "./utils";
 import * as NodeFormData from "form-data";
 
+/**
+ * A client for interfacing with the SAS Viya REST API
+ *
+ */
 export class SASViyaApiClient {
   constructor(private serverUrl: string) {}
 
+  /**
+   * Returns all available compute contexts on this server.
+   * @param accessToken - an access token for an authorized user.
+   */
   public async getAllContexts(accessToken: string) {
     const contexts = await fetch(`${this.serverUrl}/compute/contexts`, {
       headers: {
@@ -21,6 +29,10 @@ export class SASViyaApiClient {
     }));
   }
 
+  /**
+   * Returns all compute contexts on this server that the user has access to.
+   * @param accessToken - an access token for an authorized user.
+   */
   public async getExecutableContexts(accessToken: string) {
     const contexts = await fetch(`${this.serverUrl}/compute/contexts`, {
       headers: {
@@ -70,6 +82,11 @@ export class SASViyaApiClient {
     return executableContexts;
   }
 
+  /**
+   * Creates a session on the given context.
+   * @param contextName - the name of the context to create a session on.
+   * @param accessToken - an access token for an authorized user.
+   */
   public async createSession(contextName: string, accessToken: string) {
     const contexts = await fetch(`${this.serverUrl}/compute/contexts`, {
       headers: {
@@ -100,6 +117,15 @@ export class SASViyaApiClient {
     return createdSession;
   }
 
+  /**
+   * Executes code on the current SAS Viya server.
+   * @param fileName - a name for the file being submitted for execution.
+   * @param linesOfCode - an array of lines of code to execute.
+   * @param contextName - the context to execute the code in.
+   * @param accessToken - an access token for an authorized user.
+   * @param sessionId - optional session ID to reuse.
+   * @param silent - optional flag to turn of logging.
+   */
   public async executeScript(
     fileName: string,
     linesOfCode: string[],
@@ -186,6 +212,10 @@ export class SASViyaApiClient {
     }
   }
 
+  /**
+   * Performs a login redirect and returns an auth code for the given client
+   * @param clientId - the client ID to authenticate with.
+   */
   public async getAuthCode(clientId: string) {
     const authUrl = `${this.serverUrl}/SASLogon/oauth/authorize?client_id=${clientId}&response_type=code`;
 
@@ -228,6 +258,12 @@ export class SASViyaApiClient {
     return authCode;
   }
 
+  /**
+   * Exchanges the auth code for an access token for the given client.
+   * @param clientId - the client ID to authenticate with.
+   * @param clientSecret - the client secret to authenticate with.
+   * @param authCode - the auth code received from the server.
+   */
   public async getAccessToken(
     clientId: string,
     clientSecret: string,
@@ -266,6 +302,12 @@ export class SASViyaApiClient {
     return authResponse;
   }
 
+  /**
+   * Exchanges the refresh token for an access token for the given client.
+   * @param clientId - the client ID to authenticate with.
+   * @param clientSecret - the client secret to authenticate with.
+   * @param authCode - the refresh token received from the server.
+   */
   public async refreshTokens(
     clientId: string,
     clientSecret: string,
@@ -304,6 +346,11 @@ export class SASViyaApiClient {
     return authResponse;
   }
 
+  /**
+   * Deletes the client representing the supplied ID.
+   * @param clientId - the client ID to authenticate with.
+   * @param accessToken - an access token for an authorized user.
+   */
   public async deleteClient(clientId: string, accessToken: string) {
     const url = this.serverUrl + `/oauth/clients/${clientId}`;
 

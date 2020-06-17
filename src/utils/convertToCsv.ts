@@ -1,3 +1,7 @@
+/**
+ * Converts the given JSON object to a CSV string.
+ * @param data - the JSON object to convert.
+ */
 export const convertToCSV = (data: any) => {
   const replacer = (key: any, value: any) => (value === null ? "" : value);
   const headerFields = Object.keys(data[0]);

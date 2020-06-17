@@ -14,15 +14,21 @@ import {
   parseGeneratedCode,
   needsRetry,
 } from "./utils";
-import { SASjsConfig, SASjsRequest, SASjsWatingRequest } from "./types";
+import {
+  SASjsConfig,
+  SASjsRequest,
+  SASjsWaitingRequest,
+  ServerType,
+} from "./types";
 import { SASViyaApiClient } from "./SASViyaApiClient";
+import { SAS9ApiClient } from "./SAS9ApiClient";
 
 const defaultConfig: SASjsConfig = {
   serverUrl: "",
   pathSAS9: "/SASStoredProcess/do",
   pathSASViya: "/SASJobExecution",
   appLoc: "/Public/seedapp",
-  serverType: "SASVIYA",
+  serverType: ServerType.SASViya,
   debug: true,
 };
 
@@ -40,9 +46,10 @@ export default class SASjs {
   private _csrf: string | null = null;
   private retryCount: number = 0;
   private sasjsRequests: SASjsRequest[] = [];
-  private sasjsWaitingRequests: SASjsWatingRequest[] = [];
+  private sasjsWaitingRequests: SASjsWaitingRequest[] = [];
   private userName: string = "";
   private sasViyaApiClient: SASViyaApiClient | null = null;
+  private sas9ApiClient: SAS9ApiClient | null = null;
 
   constructor(config?: any) {
     this.sasjsConfig = {
@@ -58,38 +65,32 @@ export default class SASjs {
     serverName: string,
     repositoryName: string
   ) {
-    const requestPayload = linesOfCode.join("\n");
-    const executeScriptRequest = {
-      method: "PUT",
-      headers: {
-        Accept: "application/json",
-      },
-      body: `command=${requestPayload}`,
-    };
-    const executeScriptResponse = await fetch(
-      `${this.sasjsConfig.serverUrl}/sas/servers/${serverName}/cmd?repositoryName=${repositoryName}`,
-      executeScriptRequest
-    ).then((res) => res.text());
-
-    return executeScriptResponse;
+    if (this.sasjsConfig.serverType !== ServerType.SAS9) {
+      throw new Error("This operation is only supported on SAS9 servers.");
+    }
+    return await this.sas9ApiClient?.executeScript(
+      linesOfCode,
+      serverName,
+      repositoryName
+    );
   }
 
   public async getAllContexts(accessToken: string) {
-    if (this.sasjsConfig.serverType !== "SASVIYA") {
+    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
       throw new Error("This operation is only supported on SAS Viya servers.");
     }
     return await this.sasViyaApiClient!.getAllContexts(accessToken);
   }
 
   public async getExecutableContexts(accessToken: string) {
-    if (this.sasjsConfig.serverType !== "SASVIYA") {
+    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
       throw new Error("This operation is only supported on SAS Viya servers.");
     }
     return await this.sasViyaApiClient!.getExecutableContexts(accessToken);
   }
 
   public async createSession(contextName: string, accessToken: string) {
-    if (this.sasjsConfig.serverType !== "SASVIYA") {
+    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
       throw new Error("This operation is only supported on SAS Viya servers.");
     }
     return await this.sasViyaApiClient!.createSession(contextName, accessToken);
@@ -103,7 +104,7 @@ export default class SASjs {
     sessionId = "",
     silent = false
   ) {
-    if (this.sasjsConfig.serverType !== "SASVIYA") {
+    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
       throw new Error("This operation is only supported on SAS Viya servers.");
     }
     return await this.sasViyaApiClient!.executeScript(
@@ -117,7 +118,7 @@ export default class SASjs {
   }
 
   public async getAuthCode(clientId: string) {
-    if (this.sasjsConfig.serverType !== "SASVIYA") {
+    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
       throw new Error("This operation is only supported on SAS Viya servers.");
     }
     return await this.sasViyaApiClient!.getAuthCode(clientId);
@@ -128,7 +129,7 @@ export default class SASjs {
     clientSecret: string,
     authCode: string
   ) {
-    if (this.sasjsConfig.serverType !== "SASVIYA") {
+    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
       throw new Error("This operation is only supported on SAS Viya servers.");
     }
     return await this.sasViyaApiClient!.getAccessToken(
@@ -143,7 +144,7 @@ export default class SASjs {
     clientSecret: string,
     refreshToken: string
   ) {
-    if (this.sasjsConfig.serverType !== "SASVIYA") {
+    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
       throw new Error("This operation is only supported on SAS Viya servers.");
     }
     return await this.sasViyaApiClient!.refreshTokens(
@@ -154,7 +155,7 @@ export default class SASjs {
   }
 
   public async deleteClient(clientId: string, accessToken: string) {
-    if (this.sasjsConfig.serverType !== "SASVIYA") {
+    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
       throw new Error("This operation is only supported on SAS Viya servers.");
     }
     return await this.sasViyaApiClient!.deleteClient(clientId, accessToken);
@@ -337,7 +338,7 @@ export default class SASjs {
     let errorMsg = "";
 
     if (data) {
-      if (this.sasjsConfig.serverType === "SAS9") {
+      if (this.sasjsConfig.serverType === ServerType.SAS9) {
         // file upload approach
         for (const tableName in data) {
           if (isError) {
@@ -394,7 +395,7 @@ export default class SASjs {
       }
     }
 
-    const sasjsWaitingRequest: SASjsWatingRequest = {
+    const sasjsWaitingRequest: SASjsWaitingRequest = {
       requestPromise: {
         promise: null,
         resolve: null,
@@ -430,7 +431,10 @@ export default class SASjs {
               }
             }
 
-            if (response.redirected && this.sasjsConfig.serverType === "SAS9") {
+            if (
+              response.redirected &&
+              this.sasjsConfig.serverType === ServerType.SAS9
+            ) {
               isRedirected = true;
             }
 
@@ -463,7 +467,7 @@ export default class SASjs {
                 this.sasjsWaitingRequests.push(sasjsWaitingRequest);
               } else {
                 if (
-                  this.sasjsConfig.serverType === "SAS9" &&
+                  this.sasjsConfig.serverType === ServerType.SAS9 &&
                   this.sasjsConfig.debug
                 ) {
                   this.updateUsername(responseText);
@@ -477,7 +481,7 @@ export default class SASjs {
                     });
                   }
                 } else if (
-                  this.sasjsConfig.serverType === "SASVIYA" &&
+                  this.sasjsConfig.serverType === ServerType.SASViya &&
                   this.sasjsConfig.debug
                 ) {
                   try {
@@ -557,7 +561,7 @@ export default class SASjs {
   private updateUsername(response: any) {
     try {
       const responseJson = JSON.parse(response);
-      if (this.sasjsConfig.serverType === "SAS9") {
+      if (this.sasjsConfig.serverType === ServerType.SAS9) {
         this.userName = responseJson["_METAUSER"];
       } else {
         this.userName = responseJson["SYSUSERID"];
@@ -626,7 +630,7 @@ export default class SASjs {
   }
 
   private parseLogFromResponse(response: any, program: string) {
-    if (this.sasjsConfig.serverType === "SAS9") {
+    if (this.sasjsConfig.serverType === ServerType.SAS9) {
       this.appendSasjsRequest(response, program, null);
     } else {
       if (!this.sasjsConfig.debug) {
@@ -681,7 +685,7 @@ export default class SASjs {
     if (this.sasjsConfig.debug) {
       let jsonResponse;
 
-      if (this.sasjsConfig.serverType === "SAS9") {
+      if (this.sasjsConfig.serverType === ServerType.SAS9) {
         try {
           jsonResponse = JSON.parse(this.parseSAS9Response(response));
         } catch (e) {
@@ -731,17 +735,20 @@ export default class SASjs {
     }
 
     this.jobsPath =
-      this.sasjsConfig.serverType === "SASVIYA"
+      this.sasjsConfig.serverType === ServerType.SASViya
         ? this.sasjsConfig.pathSASViya
         : this.sasjsConfig.pathSAS9;
     this.loginUrl = `${this.sasjsConfig.serverUrl}/SASLogon/login`;
     this.logoutUrl =
-      this.sasjsConfig.serverType === "SAS9"
+      this.sasjsConfig.serverType === ServerType.SAS9
         ? "/SASLogon/logout?"
         : "/SASLogon/logout.do?";
 
-    if (this.sasjsConfig.serverType === "SASVIYA") {
+    if (this.sasjsConfig.serverType === ServerType.SASViya) {
       this.sasViyaApiClient = new SASViyaApiClient(this.sasjsConfig.serverUrl);
+    }
+    if (this.sasjsConfig.serverType === ServerType.SAS9) {
+      this.sas9ApiClient = new SAS9ApiClient(this.sasjsConfig.serverUrl);
     }
   }
 
@@ -757,7 +764,7 @@ export default class SASjs {
       const loginUrl = tempLoginLink;
 
       this.loginUrl =
-        this.sasjsConfig.serverType === "SASVIYA"
+        this.sasjsConfig.serverType === ServerType.SASViya
           ? tempLoginLink
           : loginUrl.replace(".do", "");
     }

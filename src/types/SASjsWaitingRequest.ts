@@ -1,4 +1,4 @@
-export interface SASjsWatingRequest {
+export interface SASjsWaitingRequest {
   requestPromise: {
     promise: any;
     resolve: any;
