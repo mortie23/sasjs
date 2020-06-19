@@ -17,14 +17,15 @@ For more information on building web apps with SAS, check out [sasjs.io](https:/
 
 ## None of this makes sense.  How do I build an app with it?
 
-Ok ok.  Deploy this [example.html](./example.html) file to your web server, and update `servertype` to `SAS9` or `SASVIYA` depending on your backend.
+Ok ok.  Deploy this [example.html](https://github.com/macropeople/sasjs/blob/master/example.html) file to your web server, and update `servertype` to `SAS9` or `SASVIYA` depending on your backend.
 
 The backend part can be deployed as follows:
 
 ```
 %let appLoc=/Public/app/readme;  /* Metadata or Viya Folder location as per SASjs config */
+/* compile macros (can also be downloaded & compiled seperately) */
 filename mc url "https://raw.githubusercontent.com/macropeople/macrocore/master/mc_all.sas";
-%inc mc; /* compile macros */
+%inc mc; 
 filename ft15f001 temp;
 parmcards4;
   %webout(FETCH) /* receive all data as SAS datasets */

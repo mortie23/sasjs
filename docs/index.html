@@ -84,11 +84,12 @@
 				<a href="#none-of-this-makes-sense--how-do-i-build-an-app-with-it" id="none-of-this-makes-sense--how-do-i-build-an-app-with-it" style="color: inherit; text-decoration: none;">
 					<h2>None of this makes sense.  How do I build an app with it?</h2>
 				</a>
-				<p>Ok ok.  Deploy this <a href="./example.html">example.html</a> file to your web server, and update <code>servertype</code> to <code>SAS9</code> or <code>SASVIYA</code> depending on your backend.</p>
+				<p>Ok ok.  Deploy this <a href="https://github.com/macropeople/sasjs/blob/master/example.html">example.html</a> file to your web server, and update <code>servertype</code> to <code>SAS9</code> or <code>SASVIYA</code> depending on your backend.</p>
 				<p>The backend part can be deployed as follows:</p>
 				<pre><code>%let appLoc=/<span class="hljs-built_in">Public</span>/app/readme;  <span class="hljs-comment">/* Metadata or Viya Folder location as per SASjs config */</span>
+<span class="hljs-comment">/* compile macros (can also be downloaded &amp; compiled seperately) */</span>
 filename mc url &quot;https://raw.githubusercontent.com/macropeople/macrocore/master/mc_all.sas&quot;;
-%inc mc; <span class="hljs-comment">/* compile macros */</span>
+%inc mc; 
 filename ft15f001 <span class="hljs-keyword">temp</span>;
 parmcards4;
   %webout(<span class="hljs-keyword">FETCH</span>) <span class="hljs-comment">/* receive all data as SAS datasets */</span>

@@ -12,7 +12,8 @@
         $('#loading-spinner').show()
         // instantiate sasjs with options such as backend app location
         // login (it's also possible to set an autologin when making requests)
-        sasJs.logIn($('#username')[0].value
+        sasJs.logIn(
+           $('#username')[0].value
           ,$('#password')[0].value
         ).then((response) => {
           if (response.isLoggedIn === true) {
@@ -27,9 +28,13 @@
         $('#loading-spinner').show()
         $('#myChart').remove();
         $('#chart-container').append('<canvas id="myChart" style="display: none;"></canvas>')
-        // make a request to a SAS service, sending data if needed
+        // make a request to a SAS service
         var type = $("#cars")[0].options[$("#cars")[0].selectedIndex].value;
-        sasJs.request("/common/getdata", {fromjs: [{ type: type }] }).then((response) => {
+        // request data from an endpoint under your appLoc
+        sasJs.request("/common/getdata", {
+            // send data as an array of objects - each object is one row
+            fromjs: [{ type: type }] 
+        }).then((response) => {
           $('#myChart').show();
           var labels = []
           var data = []
