@@ -309,7 +309,7 @@ export default class SASjs {
   /**
    * Makes a request to the SAS Service specified in `SASjob`.  The response 
    * object will always contain table names in lowercase, and column names in 
-   * uppercase.  Values are returned raw / unformatted by default, formatted
+   * uppercase.  Values are returned formatted by default, unformatted
    * values can be configured as an option in the `%webout` macro.
    * 
    * @param SASjob - The path to the SAS program (ultimately resolves to

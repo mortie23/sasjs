@@ -45,4 +45,6 @@ You now have a simple web app with a backend service!
 
 # More resources
 
-Checkout this [link](https://sasjs.io/training/resources/) or contact the [author](https://www.linkedin.com/in/allanbowe/) directly.
+For more information specific to this adapter you can check out this [user guide](https://sasjs.io/sasjs/sasjs-adapter/) or the [technical](http://adapter.sasjs.io/) documentation. 
+
+For more information on building web apps in general, check out these [resources](https://sasjs.io/training/resources/) or contact the [author](https://www.linkedin.com/in/allanbowe/) directly.
