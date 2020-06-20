@@ -198,7 +198,8 @@ export default class SASjs {
   }
 
   /**
-   * Sets the debug state.
+   * Sets the debug state.  Turning this on will enable additional logging to
+   * be returned to the adapter.
    * @param value - Boolean indicating debug state
    */
   public setDebugState(value: boolean) {
@@ -306,7 +307,11 @@ export default class SASjs {
   }
 
   /**
-   * Makes a request to the program specified.
+   * Makes a request to the SAS Service specified in `SASjob`.  The response 
+   * object will always contain table names in lowercase, and column names in 
+   * uppercase.  Values are returned raw / unformatted by default, formatted
+   * values can be configured as an option in the `%webout` macro.
+   * 
    * @param SASjob - The path to the SAS program (ultimately resolves to
    *  the SAS `_program` parameter to run a Job Definition or SAS 9 Stored 
    *  Process.)  Is prepended at runtime with the value of `appLoc`.
