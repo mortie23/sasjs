@@ -564,7 +564,7 @@
 					<a name="request" class="tsd-anchor"></a>
 					<h3>request</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">request<span class="tsd-signature-symbol">(</span>programName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, params<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span>, loginRequiredCallback<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">request<span class="tsd-signature-symbol">(</span>SASjob<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, params<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span>, loginRequiredCallback<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
@@ -580,11 +580,11 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>programName: <span class="tsd-signature-type">string</span></h5>
+									<h5>SASjob: <span class="tsd-signature-type">string</span></h5>
 									<div class="tsd-comment tsd-typography tsd-comment-text">
 										<p>The path to the SAS program (ultimately resolves to
-											the SAS <code>_program</code> parameter.)  Is prepended at runtime with the value of
-										<code>appLoc</code>.</p>
+											the SAS <code>_program</code> parameter to run a Job Definition or SAS 9 Stored
+										Process.)  Is prepended at runtime with the value of <code>appLoc</code>.</p>
 									</div>
 								</li>
 								<li>
