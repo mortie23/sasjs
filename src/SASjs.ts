@@ -307,20 +307,27 @@ export default class SASjs {
 
   /**
    * Makes a request to the program specified.
-   * @param programName - a string representing the SAS program name
-   * @param data - an object containing the data to be posted
-   * @param params - an optional object with any additional parameters
+   * @param SASjob - The path to the SAS program (ultimately resolves to
+   *  the SAS `_program` parameter to run a Job Definition or SAS 9 Stored 
+   *  Process.)  Is prepended at runtime with the value of `appLoc`.
+   * @param data - A JSON object containing one or more tables to be sent to
+   * SAS.  Can be `null` if no inputs required.
+   * @param params - Provide any changes to the config here, for instance to
+   * enable / disable `debug`.
+   * @param loginRequiredCallback - provide a function here to be called if the
+   * user is not logged in (eg to display a login form).  The request will be
+   * resubmitted after logon.
    */
   public async request(
-    programName: string,
+    SASjob: string,
     data: any,
     params?: any,
     loginRequiredCallback?: any
   ) {
     const program = this.sasjsConfig.appLoc
       ? this.sasjsConfig.appLoc.replace(/\/?$/, "/") +
-        programName.replace(/^\//, "")
-      : programName;
+      SASjob.replace(/^\//, "")
+      : SASjob;
     const apiUrl = `${this.sasjsConfig.serverUrl}${this.jobsPath}/?_program=${program}`;
 
     const inputParams = params ? params : {};
@@ -401,7 +408,7 @@ export default class SASjs {
         resolve: null,
         reject: null,
       },
-      programName,
+      SASjob,
       data,
       params,
     };
@@ -447,7 +454,7 @@ export default class SASjs {
             ) {
               if (this.retryCount < requestRetryLimit) {
                 this.retryCount++;
-                this.request(programName, data, params).then(
+                this.request(SASjob, data, params).then(
                   (res: any) => resolve(res),
                   (err: any) => reject(err)
                 );
@@ -525,7 +532,7 @@ export default class SASjs {
   private async resendWaitingRequests() {
     for (const sasjsWaitingRequest of this.sasjsWaitingRequests) {
       this.request(
-        sasjsWaitingRequest.programName,
+        sasjsWaitingRequest.SASjob,
         sasjsWaitingRequest.data,
         sasjsWaitingRequest.params
       ).then(

@@ -4,7 +4,7 @@ export interface SASjsWaitingRequest {
     resolve: any;
     reject: any;
   };
-  programName: string;
+  SASjob: string;
   data: any;
   params?: any;
 }

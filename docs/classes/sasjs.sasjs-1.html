@@ -425,7 +425,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:716</li>
+									<li>Defined in SASjs.ts:723</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../interfaces/sasjsrequest.sasjsrequest-1.html" class="tsd-signature-type">SASjsRequest</a><span class="tsd-signature-symbol">[]</span></h4>
@@ -570,7 +570,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:314</li>
+									<li>Defined in SASjs.ts:321</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -582,23 +582,32 @@
 								<li>
 									<h5>programName: <span class="tsd-signature-type">string</span></h5>
 									<div class="tsd-comment tsd-typography tsd-comment-text">
-										<p>a string representing the SAS program name</p>
+										<p>The path to the SAS program (ultimately resolves to
+											the SAS <code>_program</code> parameter.)  Is prepended at runtime with the value of
+										<code>appLoc</code>.</p>
 									</div>
 								</li>
 								<li>
 									<h5>data: <span class="tsd-signature-type">any</span></h5>
 									<div class="tsd-comment tsd-typography tsd-comment-text">
-										<p>an object containing the data to be posted</p>
+										<p>A JSON object containing one or more tables to be sent to
+										SAS.  Can be <code>null</code> if no inputs required.</p>
 									</div>
 								</li>
 								<li>
 									<h5><span class="tsd-flag ts-flagOptional">Optional</span> params: <span class="tsd-signature-type">any</span></h5>
 									<div class="tsd-comment tsd-typography tsd-comment-text">
-										<p>an optional object with any additional parameters</p>
+										<p>Provide any changes to the config here, for instance to
+										enable / disable <code>debug</code>.</p>
 									</div>
 								</li>
 								<li>
 									<h5><span class="tsd-flag ts-flagOptional">Optional</span> loginRequiredCallback: <span class="tsd-signature-type">any</span></h5>
+									<div class="tsd-comment tsd-typography tsd-comment-text">
+										<p>provide a function here to be called if the
+											user is not logged in (eg to display a login form).  The request will be
+										resubmitted after logon.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
