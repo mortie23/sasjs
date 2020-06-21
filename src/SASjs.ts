@@ -100,7 +100,7 @@ export default class SASjs {
     fileName: string,
     linesOfCode: string[],
     contextName: string,
-    accessToken: string,
+    accessToken?: string,
     sessionId = "",
     silent = false
   ) {

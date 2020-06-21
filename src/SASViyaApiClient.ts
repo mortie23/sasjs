@@ -12,13 +12,14 @@ export class SASViyaApiClient {
    * Returns all available compute contexts on this server.
    * @param accessToken - an access token for an authorized user.
    */
-  public async getAllContexts(accessToken: string) {
-    const contexts = await fetch(`${this.serverUrl}/compute/contexts`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    }).then((res) => res.json());
+  public async getAllContexts(accessToken?: string) {
+    let headers: any = {
+      "Content-Type": "application/json"
+    };
+    if (accessToken) {
+      headers.Authorization = `Bearer ${accessToken}`
+    }
+    const contexts = await fetch(`${this.serverUrl}/compute/contexts`, headers).then((res) => res.json());
     const contextsList = contexts && contexts.items ? contexts.items : [];
     return contextsList.map((context: any) => ({
       createdBy: context.createdBy,
@@ -33,13 +34,14 @@ export class SASViyaApiClient {
    * Returns all compute contexts on this server that the user has access to.
    * @param accessToken - an access token for an authorized user.
    */
-  public async getExecutableContexts(accessToken: string) {
-    const contexts = await fetch(`${this.serverUrl}/compute/contexts`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    }).then((res) => res.json());
+  public async getExecutableContexts(accessToken?: string) {
+    let headers: any = {
+      "Content-Type": "application/json"
+    };
+    if (accessToken) {
+      headers.Authorization = `Bearer ${accessToken}`
+    }
+    const contexts = await fetch(`${this.serverUrl}/compute/contexts`, headers).then((res) => res.json());
     const contextsList = contexts && contexts.items ? contexts.items : [];
     const executableContexts: any[] = [];
 
@@ -130,16 +132,17 @@ export class SASViyaApiClient {
     fileName: string,
     linesOfCode: string[],
     contextName: string,
-    accessToken: string,
+    accessToken?: string,
     sessionId = "",
     silent = false
   ) {
-    const contexts = await fetch(`${this.serverUrl}/compute/contexts`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    }).then((res) => res.json());
+    let headers: any = {
+      "Content-Type": "application/json"
+    };
+    if (accessToken) {
+      headers.Authorization = `Bearer ${accessToken}`
+    }
+    const contexts = await fetch(`${this.serverUrl}/compute/contexts`, headers).then((res) => res.json());
     const executionContext =
       contexts.items && contexts.items.length
         ? contexts.items.find((c: any) => c.name === contextName)
@@ -153,10 +156,7 @@ export class SASViyaApiClient {
       } else {
         const createSessionRequest = {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
+          headers,
         };
         const createdSession = await fetch(
           `${this.serverUrl}/compute/contexts/${executionContext.id}/sessions`,
@@ -167,10 +167,7 @@ export class SASViyaApiClient {
       // Execute job in session
       const postJobRequest = {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           name: fileName,
           description: "Powered by SASjs",
@@ -196,10 +193,7 @@ export class SASViyaApiClient {
         const log = await fetch(
           `${this.serverUrl}${logLink.href}?limit=100000`,
           {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "Content-Type": "application/json",
-            },
+            headers,
           }
         ).then((res) => res.json());
         return { jobStatus, log };
@@ -369,11 +363,17 @@ export class SASViyaApiClient {
 
   private async pollJobState(
     postedJob: any,
-    accessToken: string,
+    accessToken?: string,
     silent = false
   ) {
     let postedJobState = "";
     let pollCount = 0;
+    let headers: any = {
+      "Content-Type": "application/json"
+    };
+    if (accessToken) {
+      headers.Authorization = `Bearer ${accessToken}`
+    }
     const stateLink = postedJob.links.find((l: any) => l.rel === "state");
     return new Promise((resolve, reject) => {
       const interval = setInterval(async () => {
@@ -387,10 +387,7 @@ export class SASViyaApiClient {
               console.log("Polling job status... \n");
             }
             const jobState = await fetch(`${this.serverUrl}${stateLink.href}`, {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-              },
+              headers,
             }).then((res) => res.text());
             postedJobState = jobState.trim();
             if (!silent) {
