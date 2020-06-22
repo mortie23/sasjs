@@ -306,14 +306,31 @@ export default class SASjs {
     });
   }
 
+  public async requestViya(
+    programName: string,
+    data: any,
+    accessToken: string
+  ) {
+    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
+      throw new Error("This operation is only supported on SAS Viya servers.");
+    }
+    const postedJob = await this.sasViyaApiClient!.postJob(
+      this.sasjsConfig.appLoc,
+      programName,
+      data,
+      accessToken
+    );
+    return postedJob;
+  }
+
   /**
-   * Makes a request to the SAS Service specified in `SASjob`.  The response 
-   * object will always contain table names in lowercase, and column names in 
+   * Makes a request to the SAS Service specified in `SASjob`.  The response
+   * object will always contain table names in lowercase, and column names in
    * uppercase.  Values are returned formatted by default, unformatted
    * values can be configured as an option in the `%webout` macro.
-   * 
+   *
    * @param SASjob - The path to the SAS program (ultimately resolves to
-   *  the SAS `_program` parameter to run a Job Definition or SAS 9 Stored 
+   *  the SAS `_program` parameter to run a Job Definition or SAS 9 Stored
    *  Process.)  Is prepended at runtime with the value of `appLoc`.
    * @param data - A JSON object containing one or more tables to be sent to
    * SAS.  Can be `null` if no inputs required.
@@ -330,8 +347,7 @@ export default class SASjs {
     loginRequiredCallback?: any
   ) {
     const program = this.sasjsConfig.appLoc
-      ? this.sasjsConfig.appLoc.replace(/\/?$/, "/") +
-      SASjob.replace(/^\//, "")
+      ? this.sasjsConfig.appLoc.replace(/\/?$/, "/") + SASjob.replace(/^\//, "")
       : SASjob;
     const apiUrl = `${this.sasjsConfig.serverUrl}${this.jobsPath}/?_program=${program}`;
 
