@@ -163,7 +163,7 @@ export class SASViyaApiClient {
 
     if (executionContext) {
       // Request new session in context or use the ID passed in
-      let executionSessionId;
+      let executionSessionId: string;
       if (sessionId) {
         executionSessionId = sessionId;
       } else {
@@ -207,7 +207,7 @@ export class SASViyaApiClient {
                 headers: { ...headers, [tokenHeader]: token },
               };
               return fetch(
-                `${this.serverUrl}/jobExecution/jobs`,
+                `${this.serverUrl}/compute/sessions/${executionSessionId}/jobs`,
                 retryRequest
               ).then((res) => res.json());
             }
