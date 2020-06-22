@@ -7,19 +7,23 @@ import * as NodeFormData from "form-data";
  */
 export class SASViyaApiClient {
   constructor(private serverUrl: string) {}
+  private csrfToken: { headerName: string; value: string } | null = null;
 
   /**
    * Returns all available compute contexts on this server.
    * @param accessToken - an access token for an authorized user.
    */
   public async getAllContexts(accessToken?: string) {
-    let headers: any = {
-      "Content-Type": "application/json"
+    const headers: any = {
+      "Content-Type": "application/json",
     };
     if (accessToken) {
-      headers.Authorization = `Bearer ${accessToken}`
+      headers.Authorization = `Bearer ${accessToken}`;
     }
-    const contexts = await fetch(`${this.serverUrl}/compute/contexts`, headers).then((res) => res.json());
+    const contexts = await fetch(
+      `${this.serverUrl}/compute/contexts`,
+      headers
+    ).then((res) => res.json());
     const contextsList = contexts && contexts.items ? contexts.items : [];
     return contextsList.map((context: any) => ({
       createdBy: context.createdBy,
@@ -35,13 +39,16 @@ export class SASViyaApiClient {
    * @param accessToken - an access token for an authorized user.
    */
   public async getExecutableContexts(accessToken?: string) {
-    let headers: any = {
-      "Content-Type": "application/json"
+    const headers: any = {
+      "Content-Type": "application/json",
     };
     if (accessToken) {
-      headers.Authorization = `Bearer ${accessToken}`
+      headers.Authorization = `Bearer ${accessToken}`;
     }
-    const contexts = await fetch(`${this.serverUrl}/compute/contexts`, headers).then((res) => res.json());
+    const contexts = await fetch(
+      `${this.serverUrl}/compute/contexts`,
+      headers
+    ).then((res) => res.json());
     const contextsList = contexts && contexts.items ? contexts.items : [];
     const executableContexts: any[] = [];
 
@@ -136,13 +143,19 @@ export class SASViyaApiClient {
     sessionId = "",
     silent = false
   ) {
-    let headers: any = {
-      "Content-Type": "application/json"
+    const headers: any = {
+      "Content-Type": "application/json",
     };
     if (accessToken) {
-      headers.Authorization = `Bearer ${accessToken}`
+      headers.Authorization = `Bearer ${accessToken}`;
     }
-    const contexts = await fetch(`${this.serverUrl}/compute/contexts`, headers).then((res) => res.json());
+    if (this.csrfToken) {
+      headers[this.csrfToken.headerName] = this.csrfToken.value;
+    }
+    const contexts = await fetch(
+      `${this.serverUrl}/compute/contexts`,
+      headers
+    ).then((res) => res.json());
     const executionContext =
       contexts.items && contexts.items.length
         ? contexts.items.find((c: any) => c.name === contextName)
@@ -177,7 +190,32 @@ export class SASViyaApiClient {
       const postedJob = await fetch(
         `${this.serverUrl}/compute/sessions/${executionSessionId}/jobs`,
         postJobRequest
-      ).then((res) => res.json());
+      ).then((response) => {
+        if (!response.ok) {
+          if (response.status === 403) {
+            const tokenHeader = response.headers.get("X-CSRF-HEADER");
+
+            if (tokenHeader) {
+              const token = response.headers.get(tokenHeader);
+              this.csrfToken = {
+                headerName: tokenHeader,
+                value: token || "",
+              };
+
+              const retryRequest = {
+                ...postJobRequest,
+                headers: { ...headers, [tokenHeader]: token },
+              };
+              return fetch(
+                `${this.serverUrl}/jobExecution/jobs`,
+                retryRequest
+              ).then((res) => res.json());
+            }
+          }
+        } else {
+          return response.json();
+        }
+      });
       if (!silent) {
         console.log(`Job has been submitted for ${fileName}`);
         console.log(
@@ -368,11 +406,11 @@ export class SASViyaApiClient {
   ) {
     let postedJobState = "";
     let pollCount = 0;
-    let headers: any = {
-      "Content-Type": "application/json"
+    const headers: any = {
+      "Content-Type": "application/json",
     };
     if (accessToken) {
-      headers.Authorization = `Bearer ${accessToken}`
+      headers.Authorization = `Bearer ${accessToken}`;
     }
     const stateLink = postedJob.links.find((l: any) => l.rel === "state");
     return new Promise((resolve, reject) => {
