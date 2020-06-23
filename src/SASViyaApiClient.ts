@@ -2,10 +2,11 @@ import {
   isAuthorizeFormRequired,
   parseAndSubmitAuthorizeForm,
   convertToCSV,
+  makeRequest,
 } from "./utils";
 import * as NodeFormData from "form-data";
 import * as path from "path";
-import { Job } from "./types";
+import { Job, Session, Context } from "./types";
 
 /**
  * A client for interfacing with the SAS Viya REST API
@@ -158,10 +159,13 @@ export class SASViyaApiClient {
     if (accessToken) {
       headers.Authorization = `Bearer ${accessToken}`;
     }
-    const contexts = await fetch(
+    if (this.csrfToken) {
+      headers[this.csrfToken.headerName] = this.csrfToken.value;
+    }
+    const contexts = await this.request<{ items: Context[] }>(
       `${this.serverUrl}/compute/contexts`,
-      headers
-    ).then((res) => res.json());
+      { headers }
+    );
     const executionContext =
       contexts.items && contexts.items.length
         ? contexts.items.find((c: any) => c.name === contextName)
@@ -169,7 +173,7 @@ export class SASViyaApiClient {
 
     if (executionContext) {
       // Request new session in context or use the ID passed in
-      let executionSessionId;
+      let executionSessionId: string;
       if (sessionId) {
         executionSessionId = sessionId;
       } else {
@@ -177,10 +181,11 @@ export class SASViyaApiClient {
           method: "POST",
           headers,
         };
-        const createdSession = await fetch(
+        const createdSession = await this.request<Session>(
           `${this.serverUrl}/compute/contexts/${executionContext.id}/sessions`,
           createSessionRequest
-        ).then((res) => res.json());
+        );
+
         executionSessionId = createdSession.id;
       }
       // Execute job in session
@@ -193,15 +198,15 @@ export class SASViyaApiClient {
           code: linesOfCode,
         }),
       };
-      const postedJob = await fetch(
+      const postedJob = await this.request<Job>(
         `${this.serverUrl}/compute/sessions/${executionSessionId}/jobs`,
         postJobRequest
-      ).then((res) => res.json());
+      );
       if (!silent) {
         console.log(`Job has been submitted for ${fileName}`);
         console.log(
           `You can monitor the job progress at ${this.serverUrl}${
-            postedJob.links.find((l: any) => l.rel === "state").href
+            postedJob.links.find((l: any) => l.rel === "state")!.href
           }`
         );
       }
@@ -545,7 +550,7 @@ export class SASViyaApiClient {
       headers.Authorization = `Bearer ${accessToken}`;
     }
     const stateLink = postedJob.links.find((l: any) => l.rel === "state");
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _) => {
       const interval = setInterval(async () => {
         if (
           postedJobState === "running" ||
@@ -632,5 +637,12 @@ export class SASViyaApiClient {
       index++;
     }
     return uploadedFiles;
+  }
+  private async request<T>(url: string, options: RequestInit) {
+    return await makeRequest<T>(
+      url,
+      options,
+      (csrfToken) => (this.csrfToken = csrfToken)
+    );
   }
 }
