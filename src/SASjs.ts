@@ -30,6 +30,7 @@ const defaultConfig: SASjsConfig = {
   appLoc: "/Public/seedapp",
   serverType: ServerType.SASViya,
   debug: true,
+  contextName: "SAS Job Execution compute context",
 };
 
 const requestRetryLimit = 5;
@@ -306,30 +307,13 @@ export default class SASjs {
     });
   }
 
-  public async requestViya(
-    programName: string,
-    data: any,
-    accessToken: string
-  ) {
-    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
-      throw new Error("This operation is only supported on SAS Viya servers.");
-    }
-    const postedJob = await this.sasViyaApiClient!.postJob(
-      this.sasjsConfig.appLoc,
-      programName,
-      data,
-      accessToken
-    );
-    return postedJob;
-  }
-
   /**
    * Makes a request to the SAS Service specified in `SASjob`.  The response
    * object will always contain table names in lowercase, and column names in
    * uppercase.  Values are returned formatted by default, unformatted
    * values can be configured as an option in the `%webout` macro.
    *
-   * @param SASjob - The path to the SAS program (ultimately resolves to
+   * @param sasJob - The path to the SAS program (ultimately resolves to
    *  the SAS `_program` parameter to run a Job Definition or SAS 9 Stored
    *  Process.)  Is prepended at runtime with the value of `appLoc`.
    * @param data - A JSON object containing one or more tables to be sent to
@@ -341,14 +325,28 @@ export default class SASjs {
    * resubmitted after logon.
    */
   public async request(
-    SASjob: string,
+    sasJob: string,
     data: any,
     params?: any,
-    loginRequiredCallback?: any
+    loginRequiredCallback?: any,
+    accessToken?: string
   ) {
+    if (
+      this.sasjsConfig.serverType === ServerType.SASViya &&
+      this.sasjsConfig.contextName
+    ) {
+      return await this.sasViyaApiClient?.executeJob(
+        this.sasjsConfig.appLoc,
+        sasJob,
+        this.sasjsConfig.contextName,
+        this.sasjsConfig.debug,
+        data,
+        accessToken
+      );
+    }
     const program = this.sasjsConfig.appLoc
-      ? this.sasjsConfig.appLoc.replace(/\/?$/, "/") + SASjob.replace(/^\//, "")
-      : SASjob;
+      ? this.sasjsConfig.appLoc.replace(/\/?$/, "/") + sasJob.replace(/^\//, "")
+      : sasJob;
     const apiUrl = `${this.sasjsConfig.serverUrl}${this.jobsPath}/?_program=${program}`;
 
     const inputParams = params ? params : {};
@@ -429,7 +427,7 @@ export default class SASjs {
         resolve: null,
         reject: null,
       },
-      SASjob,
+      SASjob: sasJob,
       data,
       params,
     };
@@ -475,7 +473,7 @@ export default class SASjs {
             ) {
               if (this.retryCount < requestRetryLimit) {
                 this.retryCount++;
-                this.request(SASjob, data, params).then(
+                this.request(sasJob, data, params).then(
                   (res: any) => resolve(res),
                   (err: any) => reject(err)
                 );

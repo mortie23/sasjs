@@ -8,5 +8,6 @@ export * from "./needsRetry";
 export * from "./parseAndSubmitAuthorizeForm";
 export * from "./parseGeneratedCode";
 export * from "./parseSourceCode";
+export * from "./parseSasViyaLog";
 export * from "./serialize";
 export * from "./splitChunks";

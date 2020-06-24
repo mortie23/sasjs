@@ -1,5 +1,6 @@
 export * from "./Context";
 export * from "./CsrfToken";
+export * from "./Folder";
 export * from "./Job";
 export * from "./Link";
 export * from "./SASjsConfig";

@@ -1,4 +1,5 @@
 import { Link } from "./Link";
+import { JobResult } from "./JobResult";
 
 export interface Job {
   id: string;
@@ -6,4 +7,5 @@ export interface Job {
   uri: string;
   createdBy: string;
   links: Link[];
+  results: JobResult;
 }
