@@ -331,18 +331,45 @@ export default class SASjs {
     loginRequiredCallback?: any,
     accessToken?: string
   ) {
+    const sasjsWaitingRequest: SASjsWaitingRequest = {
+      requestPromise: {
+        promise: null,
+        resolve: null,
+        reject: null,
+      },
+      SASjob: sasJob,
+      data,
+      params,
+    };
+
     if (
       this.sasjsConfig.serverType === ServerType.SASViya &&
       this.sasjsConfig.contextName
     ) {
-      return await this.sasViyaApiClient?.executeJob(
-        this.sasjsConfig.appLoc,
-        sasJob,
-        this.sasjsConfig.contextName,
-        this.sasjsConfig.debug,
-        data,
-        accessToken
-      );
+      sasjsWaitingRequest.requestPromise.promise = new Promise(async (resolve, reject) => {
+        let session = await this.checkSession();
+
+        if (!session.isLoggedIn) {
+          if (loginRequiredCallback) loginRequiredCallback(true);
+          logInRequired = true;
+          sasjsWaitingRequest.requestPromise.resolve = resolve;
+          sasjsWaitingRequest.requestPromise.reject = reject;
+          this.sasjsWaitingRequests.push(sasjsWaitingRequest);
+        } else {
+          resolve(
+            await this.sasViyaApiClient?.executeJob(
+              this.sasjsConfig.appLoc,
+              sasJob,
+              this.sasjsConfig.contextName,
+              this.sasjsConfig.debug,
+              data,
+              accessToken
+            )
+          )
+        }
+
+        return sasjsWaitingRequest.requestPromise.promise;
+      });
     }
     const program = this.sasjsConfig.appLoc
       ? this.sasjsConfig.appLoc.replace(/\/?$/, "/") + sasJob.replace(/^\//, "")
@@ -420,17 +447,6 @@ export default class SASjs {
         formData.append(key, requestParams[key]);
       }
     }
-
-    const sasjsWaitingRequest: SASjsWaitingRequest = {
-      requestPromise: {
-        promise: null,
-        resolve: null,
-        reject: null,
-      },
-      SASjob: sasJob,
-      data,
-      params,
-    };
 
     let isRedirected = false;
 
