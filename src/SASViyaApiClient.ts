@@ -445,8 +445,13 @@ export class SASViyaApiClient {
         _contextName: contextName,
         _program: `${rootFolder}/${sasJob}`,
         _webin_file_count: files.length,
-        _debug: debug,
       };
+
+      if (debug) {
+        jobArguments["_omittextlog"] = "false";
+        jobArguments["_omitsessionresults"] = "false";
+        jobArguments["_debug"] = 131;
+      }
 
       files.forEach((fileInfo, index) => {
         jobArguments[
