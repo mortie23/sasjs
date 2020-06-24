@@ -102,6 +102,7 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="sasviyaapiclient.sasviyaapiclient-1.html#createsession" class="tsd-kind-icon">createSession</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="sasviyaapiclient.sasviyaapiclient-1.html#deleteclient" class="tsd-kind-icon">deleteClient</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="sasviyaapiclient.sasviyaapiclient-1.html#executejob" class="tsd-kind-icon">executeJob</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="sasviyaapiclient.sasviyaapiclient-1.html#executescript" class="tsd-kind-icon">executeScript</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="sasviyaapiclient.sasviyaapiclient-1.html#getaccesstoken" class="tsd-kind-icon">getAccessToken</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="sasviyaapiclient.sasviyaapiclient-1.html#getallcontexts" class="tsd-kind-icon">getAllContexts</a></li>
@@ -119,19 +120,22 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new SASViya<wbr>Api<wbr>Client<span class="tsd-signature-symbol">(</span>serverUrl<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="sasviyaapiclient.sasviyaapiclient-1.html" class="tsd-signature-type">SASViyaApiClient</a></li>
+						<li class="tsd-signature tsd-kind-icon">new SASViya<wbr>Api<wbr>Client<span class="tsd-signature-symbol">(</span>serverUrl<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, jobMap<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><a href="../interfaces/job.job-1.html" class="tsd-signature-type">Job</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="sasviyaapiclient.sasviyaapiclient-1.html" class="tsd-signature-type">SASViyaApiClient</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASViyaApiClient.ts:8</li>
+									<li>Defined in SASViyaApiClient.ts:16</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>serverUrl: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> jobMap: <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><a href="../interfaces/job.job-1.html" class="tsd-signature-type">Job</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = new Map&lt;string, Job[]&gt;()</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="sasviyaapiclient.sasviyaapiclient-1.html" class="tsd-signature-type">SASViyaApiClient</a></h4>
@@ -145,13 +149,13 @@
 					<a name="createsession" class="tsd-anchor"></a>
 					<h3>create<wbr>Session</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Session<span class="tsd-signature-symbol">(</span>contextName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, accessToken<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Session<span class="tsd-signature-symbol">(</span>contextName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, accessToken<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/session.session-1.html" class="tsd-signature-type">Session</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASViyaApiClient.ts:92</li>
+									<li>Defined in SASViyaApiClient.ts:110</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -167,13 +171,13 @@
 									</div>
 								</li>
 								<li>
-									<h5>accessToken: <span class="tsd-signature-type">string</span></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> accessToken: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
 									<div class="tsd-comment tsd-typography tsd-comment-text">
 										<p>an access token for an authorized user.</p>
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/session.session-1.html" class="tsd-signature-type">Session</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -181,13 +185,13 @@
 					<a name="deleteclient" class="tsd-anchor"></a>
 					<h3>delete<wbr>Client</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">delete<wbr>Client<span class="tsd-signature-symbol">(</span>clientId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, accessToken<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">delete<wbr>Client<span class="tsd-signature-symbol">(</span>clientId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, accessToken<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASViyaApiClient.ts:348</li>
+									<li>Defined in SASViyaApiClient.ts:380</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -203,13 +207,73 @@
 									</div>
 								</li>
 								<li>
-									<h5>accessToken: <span class="tsd-signature-type">string</span></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> accessToken: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
 									<div class="tsd-comment tsd-typography tsd-comment-text">
 										<p>an access token for an authorized user.</p>
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="executejob" class="tsd-anchor"></a>
+					<h3>execute<wbr>Job</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">execute<wbr>Job<span class="tsd-signature-symbol">(</span>rootFolder<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, sasJob<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, contextName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, debug<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span>, data<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span>, accessToken<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in SASViyaApiClient.ts:404</li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
+								<div class="lead">
+									<p>Executes a job via the SAS Viya Job Execution API</p>
+							</div></div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>rootFolder: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography tsd-comment-text">
+										<p>the root folder to look for the job in.</p>
+									</div>
+								</li>
+								<li>
+									<h5>sasJob: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography tsd-comment-text">
+										<p>the relative path to the job.</p>
+									</div>
+								</li>
+								<li>
+									<h5>contextName: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography tsd-comment-text">
+										<p>the name of the context where the job is to be executed.</p>
+									</div>
+								</li>
+								<li>
+									<h5>debug: <span class="tsd-signature-type">boolean</span></h5>
+									<div class="tsd-comment tsd-typography tsd-comment-text">
+										<p>sets the _debug flag in the job arguments.</p>
+									</div>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> data: <span class="tsd-signature-type">any</span></h5>
+									<div class="tsd-comment tsd-typography tsd-comment-text">
+										<p>any data to be passed in as input to the job.</p>
+									</div>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> accessToken: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography tsd-comment-text">
+										<p>an optional access token for an authorized user.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -223,7 +287,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASViyaApiClient.ts:131</li>
+									<li>Defined in SASViyaApiClient.ts:155</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -283,7 +347,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASViyaApiClient.ts:261</li>
+									<li>Defined in SASViyaApiClient.ts:293</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -319,13 +383,13 @@
 					<a name="getallcontexts" class="tsd-anchor"></a>
 					<h3>get<wbr>All<wbr>Contexts</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>All<wbr>Contexts<span class="tsd-signature-symbol">(</span>accessToken<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>All<wbr>Contexts<span class="tsd-signature-symbol">(</span>accessToken<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASViyaApiClient.ts:15</li>
+									<li>Defined in SASViyaApiClient.ts:27</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -341,7 +405,7 @@
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -355,7 +419,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASViyaApiClient.ts:213</li>
+									<li>Defined in SASViyaApiClient.ts:245</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -385,7 +449,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASViyaApiClient.ts:37</li>
+									<li>Defined in SASViyaApiClient.ts:52</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -415,7 +479,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASViyaApiClient.ts:305</li>
+									<li>Defined in SASViyaApiClient.ts:337</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -445,7 +509,7 @@
 					</ul>
 				</section>
 			</section>
-			<!--{&quot;options&quot;:&quot;/home/mihajlo/shared-projects/macro-people/sasjs&quot;,&quot;tsconfig&quot;:&quot;/home/mihajlo/shared-projects/macro-people/sasjs&quot;,&quot;inputFiles&quot;:[&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/SAS9ApiClient.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/SASViyaApiClient.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/SASjs.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/index.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/types/SASjsConfig.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/types/SASjsRequest.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/types/SASjsWaitingRequest.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/types/ServerType.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/types/index.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/compareTimestamps.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/convertToCsv.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/index.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/isAuthorizeFormRequired.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/isLoginRequired.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/isLoginSuccess.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/needsRetry.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/parseAndSubmitAuthorizeForm.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/parseGeneratedCode.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/parseSourceCode.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/serialize.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/splitChunks.ts&quot;],&quot;mode&quot;:1,&quot;includeDeclarations&quot;:true,&quot;entryPoint&quot;:&quot;&quot;,&quot;exclude&quot;:[&quot;**/*+(index|.spec|.e2e).ts&quot;],&quot;externalPattern&quot;:[],&quot;excludeExternals&quot;:true,&quot;excludeNotExported&quot;:true,&quot;excludeNotDocumented&quot;:false,&quot;excludePrivate&quot;:true,&quot;excludeProtected&quot;:false,&quot;ignoreCompilerErrors&quot;:true,&quot;disableSources&quot;:false,&quot;includes&quot;:&quot;&quot;,&quot;media&quot;:&quot;&quot;,&quot;out&quot;:&quot;docs&quot;,&quot;json&quot;:&quot;&quot;,&quot;theme&quot;:&quot;./node_modules/typedoc-neo-theme/bin/default&quot;,&quot;name&quot;:&quot;&quot;,&quot;includeVersion&quot;:false,&quot;excludeTags&quot;:[],&quot;readme&quot;:&quot;&quot;,&quot;defaultCategory&quot;:&quot;Other&quot;,&quot;categoryOrder&quot;:[],&quot;categorizeByGroup&quot;:true,&quot;gitRevision&quot;:&quot;&quot;,&quot;gitRemote&quot;:&quot;origin&quot;,&quot;gaID&quot;:&quot;&quot;,&quot;gaSite&quot;:&quot;auto&quot;,&quot;hideGenerator&quot;:false,&quot;toc&quot;:[],&quot;disableOutputCheck&quot;:true,&quot;help&quot;:false,&quot;version&quot;:false,&quot;plugin&quot;:[],&quot;logger&quot;:&quot;console&quot;,&quot;listInvalidSymbolLinks&quot;:false,&quot;links&quot;:[{&quot;label&quot;:&quot;SASjs on Github&quot;,&quot;url&quot;:&quot;https://github.com/macropeople/sasjs&quot;},{&quot;label&quot;:&quot;SASjs.io&quot;,&quot;url&quot;:&quot;https://sasjs.io&quot;},{&quot;label&quot;:&quot;SASjs CLI&quot;,&quot;url&quot;:&quot;https://github.com/macropeople/sasjs-cli&quot;},{&quot;label&quot;:&quot;React Seed App&quot;,&quot;url&quot;:&quot;https://github.com/macropeople/react-seed-app&quot;}],&quot;outline&quot;:[{&quot;SAS Adapter&quot;:{&quot;SASjs&quot;:&quot;modules/sasjs&quot;,&quot;SASjsConfig&quot;:&quot;classes/sasjsconfig.sasjsconfig-1&quot;,&quot;ServerType&quot;:&quot;enums/servertype.servertype-1&quot;,&quot;SASjsRequest&quot;:&quot;interfaces/sasjsrequest.sasjsrequest-1&quot;,&quot;SASjsWaitingRequest&quot;:&quot;interfaces/sasjswaitingrequest.sasjswaitingrequest-1&quot;},&quot;SAS Viya API Client&quot;:&quot;classes/sasviyaapiclient.sasviyaapiclient-1&quot;,&quot;SAS 9 API Client&quot;:&quot;classes/sas9apiclient.sas9apiclient-1&quot;}],&quot;disableAutoModuleName&quot;:&quot;false&quot;}-->
+			<!--{&quot;options&quot;:&quot;/Users/kacondy/Code/MacroPeople/github/sasjs&quot;,&quot;tsconfig&quot;:&quot;/Users/kacondy/Code/MacroPeople/github/sasjs&quot;,&quot;inputFiles&quot;:[&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/SAS9ApiClient.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/SASViyaApiClient.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/SASjs.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/index.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/types/Context.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/types/CsrfToken.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/types/Folder.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/types/Job.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/types/JobResult.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/types/Link.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/types/SASjsConfig.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/types/SASjsRequest.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/types/SASjsWaitingRequest.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/types/ServerType.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/types/Session.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/types/index.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/utils/compareTimestamps.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/utils/convertToCsv.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/utils/index.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/utils/isAuthorizeFormRequired.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/utils/isLoginRequired.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/utils/isLoginSuccess.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/utils/makeRequest.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/utils/needsRetry.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/utils/parseAndSubmitAuthorizeForm.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/utils/parseGeneratedCode.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/utils/parseSasViyaLog.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/utils/parseSourceCode.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/utils/serialize.ts&quot;,&quot;/Users/kacondy/Code/MacroPeople/github/sasjs/src/utils/splitChunks.ts&quot;],&quot;mode&quot;:1,&quot;includeDeclarations&quot;:true,&quot;entryPoint&quot;:&quot;&quot;,&quot;exclude&quot;:[&quot;**/*+(index|.spec|.e2e).ts&quot;],&quot;externalPattern&quot;:[],&quot;excludeExternals&quot;:true,&quot;excludeNotExported&quot;:true,&quot;excludeNotDocumented&quot;:false,&quot;excludePrivate&quot;:true,&quot;excludeProtected&quot;:false,&quot;ignoreCompilerErrors&quot;:true,&quot;disableSources&quot;:false,&quot;includes&quot;:&quot;&quot;,&quot;media&quot;:&quot;&quot;,&quot;out&quot;:&quot;docs&quot;,&quot;json&quot;:&quot;&quot;,&quot;theme&quot;:&quot;./node_modules/typedoc-neo-theme/bin/default&quot;,&quot;name&quot;:&quot;&quot;,&quot;includeVersion&quot;:false,&quot;excludeTags&quot;:[],&quot;readme&quot;:&quot;&quot;,&quot;defaultCategory&quot;:&quot;Other&quot;,&quot;categoryOrder&quot;:[],&quot;categorizeByGroup&quot;:true,&quot;gitRevision&quot;:&quot;&quot;,&quot;gitRemote&quot;:&quot;origin&quot;,&quot;gaID&quot;:&quot;&quot;,&quot;gaSite&quot;:&quot;auto&quot;,&quot;hideGenerator&quot;:false,&quot;toc&quot;:[],&quot;disableOutputCheck&quot;:true,&quot;help&quot;:false,&quot;version&quot;:false,&quot;plugin&quot;:[],&quot;logger&quot;:&quot;console&quot;,&quot;listInvalidSymbolLinks&quot;:false,&quot;links&quot;:[{&quot;label&quot;:&quot;SASjs on Github&quot;,&quot;url&quot;:&quot;https://github.com/macropeople/sasjs&quot;},{&quot;label&quot;:&quot;SASjs.io&quot;,&quot;url&quot;:&quot;https://sasjs.io&quot;},{&quot;label&quot;:&quot;SASjs CLI&quot;,&quot;url&quot;:&quot;https://github.com/macropeople/sasjs-cli&quot;},{&quot;label&quot;:&quot;React Seed App&quot;,&quot;url&quot;:&quot;https://github.com/macropeople/react-seed-app&quot;}],&quot;outline&quot;:[{&quot;SAS Adapter&quot;:{&quot;SASjs&quot;:&quot;modules/sasjs&quot;,&quot;SASjsConfig&quot;:&quot;classes/sasjsconfig.sasjsconfig-1&quot;,&quot;ServerType&quot;:&quot;enums/servertype.servertype-1&quot;,&quot;SASjsRequest&quot;:&quot;interfaces/sasjsrequest.sasjsrequest-1&quot;,&quot;SASjsWaitingRequest&quot;:&quot;interfaces/sasjswaitingrequest.sasjswaitingrequest-1&quot;},&quot;SAS Viya API Client&quot;:&quot;classes/sasviyaapiclient.sasviyaapiclient-1&quot;,&quot;SAS 9 API Client&quot;:&quot;classes/sas9apiclient.sas9apiclient-1&quot;}],&quot;disableAutoModuleName&quot;:&quot;false&quot;}-->
 		</div>
 		<div class="col-2 col-menu secondary-menu">
 			<nav class="tsd-navigation secondary menu-sticky">
@@ -463,6 +527,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="sasviyaapiclient.sasviyaapiclient-1.html#deleteclient" class="tsd-kind-icon">delete<wbr>Client</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="sasviyaapiclient.sasviyaapiclient-1.html#executejob" class="tsd-kind-icon">execute<wbr>Job</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="sasviyaapiclient.sasviyaapiclient-1.html#executescript" class="tsd-kind-icon">execute<wbr>Script</a>
