@@ -16,9 +16,15 @@ import { Job, Session, Context, Folder } from "./types";
 export class SASViyaApiClient {
   constructor(
     private serverUrl: string,
+    private rootFolderName: string,
     private jobMap = new Map<string, Job[]>()
-  ) {}
+  ) {
+    if (!rootFolderName) {
+      throw new Error("Root folder must be provided.");
+    }
+  }
   private csrfToken: { headerName: string; value: string } | null = null;
+  private rootFolder: Folder | null = null;
 
   /**
    * Returns all available compute contexts on this server.
@@ -239,6 +245,60 @@ export class SASViyaApiClient {
   }
 
   /**
+   * Creates a folder in the specified location.
+   * @param folderName - the name of the new folder.
+   */
+  public async createFolder(folderName: string, accessToken?: string) {
+    if (!this.rootFolder) {
+      this.populateRootFolder(accessToken);
+    }
+
+    if (!this.rootFolder) {
+      throw new Error("Root folder was not found");
+    }
+
+    const createFolderRequest: RequestInit = {
+      method: "POST",
+      body: JSON.stringify({
+        name: folderName,
+        type: "folder",
+      }),
+    };
+
+    createFolderRequest.headers = { "Content-Type": "application/json" };
+    if (accessToken) {
+      createFolderRequest.headers.Authorization = `Bearer ${accessToken}`;
+    }
+
+    const createFolderResponse = await this.request<Folder>(
+      `${this.serverUrl}/folders/folders?parentFolderUri=/folders/folders/${this.rootFolder.id}`,
+      createFolderRequest
+    );
+    return createFolderResponse;
+  }
+
+  /**
+   * Creates a file in the specified folder.
+   * @param folderName - the location of the new file.
+   * @param fileName - the name of the new file to be created.
+   * @param fileContent - the content of the file.
+   */
+  public async createFile(
+    folderName: string,
+    fileName: string,
+    fileContent: string,
+    accessToken?: string
+  ) {
+    if (!this.rootFolder) {
+      this.populateRootFolder(accessToken);
+    }
+
+    if (!this.rootFolder) {
+      throw new Error("Root folder was not found");
+    }
+  }
+
+  /**
    * Performs a login redirect and returns an auth code for the given client
    * @param clientId - the client ID to authenticate with.
    */
@@ -394,7 +454,6 @@ export class SASViyaApiClient {
 
   /**
    * Executes a job via the SAS Viya Job Execution API
-   * @param rootFolder - the root folder to look for the job in.
    * @param sasJob - the relative path to the job.
    * @param contextName - the name of the context where the job is to be executed.
    * @param debug - sets the _debug flag in the job arguments.
@@ -402,18 +461,26 @@ export class SASViyaApiClient {
    * @param accessToken - an optional access token for an authorized user.
    */
   public async executeJob(
-    rootFolder: string,
     sasJob: string,
     contextName: string,
     debug: boolean,
     data?: any,
     accessToken?: string
   ) {
-    if (!this.jobMap.size) {
-      await this.populateJobMap(rootFolder, accessToken);
+    if (!this.rootFolder) {
+      this.populateRootFolder(accessToken);
+    }
+
+    if (!this.rootFolder) {
+      throw new Error("Root folder was not found");
     }
     if (!this.jobMap.size) {
-      throw new Error(`The job ${sasJob} was not found in ${rootFolder}`);
+      await this.populateJobMap(accessToken);
+    }
+    if (!this.jobMap.size) {
+      throw new Error(
+        `The job ${sasJob} was not found in ${this.rootFolderName}`
+      );
     }
 
     let files: any[] = [];
@@ -443,8 +510,13 @@ export class SASViyaApiClient {
 
       const jobArguments: { [key: string]: any } = {
         _contextName: contextName,
-        _program: `${rootFolder}/${sasJob}`,
+        _program: `${this.rootFolderName}/${sasJob}`,
         _webin_file_count: files.length,
+        _OMITJSONLISTING: true,
+        _OMITJSONLOG: true,
+        _OMITSESSIONRESULTS: true,
+        _OMITTEXTLISTING: true,
+        _OMITTEXTLOG: true,
       };
 
       if (debug) {
@@ -500,13 +572,13 @@ export class SASViyaApiClient {
       }
     }
     throw new Error(
-      `The job ${sasJob} was not found at the appLoc ${rootFolder}`
+      `The job ${sasJob} was not found at the location ${this.rootFolderName}`
     );
   }
 
-  private async populateJobMap(folderName: string, accessToken?: string) {
+  private async populateJobMap(accessToken?: string) {
     const allFiles = new Map<string, Job[]>();
-    const url = "/folders/folders/@item?path=" + folderName;
+    const url = "/folders/folders/@item?path=" + this.rootFolderName;
     const requestInfo: any = {
       method: "GET",
     };
@@ -530,7 +602,10 @@ export class SASViyaApiClient {
       .filter((i: any) => i.contentType === "folder")
       .map(async (member: any) => {
         const subFolderUrl =
-          "/folders/folders/@item?path=" + folderName + "/" + member.name;
+          "/folders/folders/@item?path=" +
+          this.rootFolderName +
+          "/" +
+          member.name;
         const memberDetail = await this.request<Folder>(
           `${this.serverUrl}${subFolderUrl}`,
           requestInfo
@@ -553,6 +628,22 @@ export class SASViyaApiClient {
     await Promise.all(subfolderRequests);
 
     this.jobMap = allFiles;
+  }
+
+  private async populateRootFolder(accessToken?: string) {
+    const url = "/folders/folders/@item?path=" + this.rootFolderName;
+    const requestInfo: RequestInit = {
+      method: "GET",
+    };
+    if (accessToken) {
+      requestInfo.headers = { Authorization: `Bearer ${accessToken}` };
+    }
+    const rootFolder = await this.request<Folder>(
+      `${this.serverUrl}${url}`,
+      requestInfo
+    ).catch(() => null);
+
+    this.rootFolder = rootFolder;
   }
 
   private async pollJobState(

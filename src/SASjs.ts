@@ -118,6 +118,13 @@ export default class SASjs {
     );
   }
 
+  public async createFolder(folderName: string, accessToken?: string) {
+    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
+      throw new Error("This operation is only supported on SAS Viya servers.");
+    }
+    return await this.sasViyaApiClient!.createFolder(folderName, accessToken);
+  }
+
   public async getAuthCode(clientId: string) {
     if (this.sasjsConfig.serverType !== ServerType.SASViya) {
       throw new Error("This operation is only supported on SAS Viya servers.");
@@ -346,30 +353,31 @@ export default class SASjs {
       this.sasjsConfig.serverType === ServerType.SASViya &&
       this.sasjsConfig.contextName
     ) {
-      sasjsWaitingRequest.requestPromise.promise = new Promise(async (resolve, reject) => {
-        let session = await this.checkSession();
+      sasjsWaitingRequest.requestPromise.promise = new Promise(
+        async (resolve, reject) => {
+          const session = await this.checkSession();
 
-        if (!session.isLoggedIn) {
-          if (loginRequiredCallback) loginRequiredCallback(true);
-          logInRequired = true;
-          sasjsWaitingRequest.requestPromise.resolve = resolve;
-          sasjsWaitingRequest.requestPromise.reject = reject;
-          this.sasjsWaitingRequests.push(sasjsWaitingRequest);
-        } else {
-          resolve(
-            await this.sasViyaApiClient?.executeJob(
-              this.sasjsConfig.appLoc,
-              sasJob,
-              this.sasjsConfig.contextName,
-              this.sasjsConfig.debug,
-              data,
-              accessToken
-            )
-          )
+          if (!session.isLoggedIn) {
+            if (loginRequiredCallback) loginRequiredCallback(true);
+            logInRequired = true;
+            sasjsWaitingRequest.requestPromise.resolve = resolve;
+            sasjsWaitingRequest.requestPromise.reject = reject;
+            this.sasjsWaitingRequests.push(sasjsWaitingRequest);
+          } else {
+            resolve(
+              await this.sasViyaApiClient?.executeJob(
+                sasJob,
+                this.sasjsConfig.contextName,
+                this.sasjsConfig.debug,
+                data,
+                accessToken
+              )
+            );
+          }
+
+          return sasjsWaitingRequest.requestPromise.promise;
         }
-
-        return sasjsWaitingRequest.requestPromise.promise;
-      });
+      );
     }
     const program = this.sasjsConfig.appLoc
       ? this.sasjsConfig.appLoc.replace(/\/?$/, "/") + sasJob.replace(/^\//, "")
@@ -787,7 +795,10 @@ export default class SASjs {
         : "/SASLogon/logout.do?";
 
     if (this.sasjsConfig.serverType === ServerType.SASViya) {
-      this.sasViyaApiClient = new SASViyaApiClient(this.sasjsConfig.serverUrl);
+      this.sasViyaApiClient = new SASViyaApiClient(
+        this.sasjsConfig.serverUrl,
+        this.sasjsConfig.appLoc
+      );
     }
     if (this.sasjsConfig.serverType === ServerType.SAS9) {
       this.sas9ApiClient = new SAS9ApiClient(this.sasjsConfig.serverUrl);
