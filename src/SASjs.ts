@@ -354,14 +354,6 @@ export default class SASjs {
       this.sasjsConfig.serverType === ServerType.SASViya &&
       this.sasjsConfig.contextName
     ) {
-      // TODO (ka: Figure out how to make 'loginRequired' work
-      return await this.sasViyaApiClient?.executeJob(
-        sasJob,
-        this.sasjsConfig.contextName,
-        this.sasjsConfig.debug,
-        data,
-        accessToken
-      );
       sasjsWaitingRequest.requestPromise.promise = new Promise(
         async (resolve, reject) => {
           const session = await this.checkSession();
@@ -383,10 +375,9 @@ export default class SASjs {
               )
             );
           }
-
-          return sasjsWaitingRequest.requestPromise.promise;
         }
       );
+      return sasjsWaitingRequest.requestPromise.promise;
     } else {
       const program = this.sasjsConfig.appLoc
         ? this.sasjsConfig.appLoc.replace(/\/?$/, "/") +
