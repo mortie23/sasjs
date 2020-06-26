@@ -250,7 +250,7 @@ export class SASViyaApiClient {
    */
   public async createFolder(folderName: string, accessToken?: string) {
     if (!this.rootFolder) {
-      this.populateRootFolder(accessToken);
+      await this.populateRootFolder(accessToken);
     }
 
     if (!this.rootFolder) {
@@ -290,7 +290,7 @@ export class SASViyaApiClient {
     accessToken?: string
   ) {
     if (!this.rootFolder) {
-      this.populateRootFolder(accessToken);
+      await this.populateRootFolder(accessToken);
     }
 
     if (!this.rootFolder) {
@@ -468,7 +468,7 @@ export class SASViyaApiClient {
     accessToken?: string
   ) {
     if (!this.rootFolder) {
-      this.populateRootFolder(accessToken);
+      await this.populateRootFolder(accessToken);
     }
 
     if (!this.rootFolder) {
@@ -543,10 +543,9 @@ export class SASViyaApiClient {
         }),
       };
       const postedJob = await this.request<Job>(
-        `${this.serverUrl}/jobExecution/jobs`,
+        `${this.serverUrl}/jobExecution/jobs?_action=wait`,
         postJobRequest
       );
-      const jobStatus = await this.pollJobState(postedJob, accessToken);
       const currentJob = await this.request<Job>(
         `${this.serverUrl}/jobExecution/jobs/${postedJob.id}`,
         { headers }
@@ -559,17 +558,8 @@ export class SASViyaApiClient {
         );
         return result;
       }
-      const logLink = currentJob.links.find((l: any) => l.rel === "log");
-      if (logLink) {
-        const log = await this.request<any>(
-          `${this.serverUrl}${logLink.href}/content`,
-          { headers }
-        );
 
-        return { jobStatus, log: parseSasViyaLog(log) };
-      } else {
-        return postedJob;
-      }
+      return postedJob;
     }
     throw new Error(
       `The job ${sasJob} was not found at the location ${this.rootFolderName}`
@@ -692,7 +682,7 @@ export class SASViyaApiClient {
           clearInterval(interval);
           resolve(postedJobState);
         }
-      }, 3000);
+      }, 100);
     });
   }
 
