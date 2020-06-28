@@ -248,13 +248,25 @@ export class SASViyaApiClient {
    * Creates a folder in the specified location.
    * @param folderName - the name of the new folder.
    */
-  public async createFolder(folderName: string, accessToken?: string) {
-    if (!this.rootFolder) {
-      await this.populateRootFolder(accessToken);
+  public async createFolder(folderName: string, parentFolderPath?: string, parentFolderUri?: string, accessToken?: string) {
+    if (!parentFolderPath && !parentFolderUri) {
+      throw new Error('Parent folder path or uri is required');
     }
 
-    if (!this.rootFolder) {
-      throw new Error("Root folder was not found");
+    if (!parentFolderUri) {
+      const url = "/folders/folders/@item?path=" + parentFolderPath;
+      const requestInfo: any = {
+        method: "GET",
+      };
+      if (accessToken) {
+        requestInfo.headers = { Authorization: `Bearer ${accessToken}` };
+      }
+      const folder = await this.request<Folder>(
+        `${this.serverUrl}${url}`,
+        requestInfo
+      );
+
+      parentFolderUri = `/folders/folders/${folder.id}`;
     }
 
     const createFolderRequest: RequestInit = {
@@ -271,7 +283,7 @@ export class SASViyaApiClient {
     }
 
     const createFolderResponse = await this.request<Folder>(
-      `${this.serverUrl}/folders/folders?parentFolderUri=/folders/folders/${this.rootFolder.id}`,
+      `${this.serverUrl}/folders/folders?parentFolderUri=${parentFolderUri}`,
       createFolderRequest
     );
     return createFolderResponse;
