@@ -125,6 +125,23 @@ export default class SASjs {
     return await this.sasViyaApiClient!.createFolder(folderName, accessToken);
   }
 
+  public async createJobDefinition(
+    folderName: string,
+    jobName: string,
+    code: string,
+    accessToken?: string
+  ) {
+    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
+      throw new Error("This operation is only supported on SAS Viya servers.");
+    }
+    return await this.sasViyaApiClient!.createJobDefinition(
+      folderName,
+      jobName,
+      code,
+      accessToken
+    );
+  }
+
   public async getAuthCode(clientId: string) {
     if (this.sasjsConfig.serverType !== ServerType.SASViya) {
       throw new Error("This operation is only supported on SAS Viya servers.");

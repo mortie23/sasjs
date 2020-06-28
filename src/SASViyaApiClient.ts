@@ -17,7 +17,7 @@ export class SASViyaApiClient {
   constructor(
     private serverUrl: string,
     private rootFolderName: string,
-    private jobMap = new Map<string, Job[]>()
+    private rootFolderMap = new Map<string, Job[]>()
   ) {
     if (!rootFolderName) {
       throw new Error("Root folder must be provided.");
@@ -280,22 +280,41 @@ export class SASViyaApiClient {
   /**
    * Creates a file in the specified folder.
    * @param folderName - the location of the new file.
-   * @param fileName - the name of the new file to be created.
-   * @param fileContent - the content of the file.
+   * @param jobName - the name of the new job to be created.
+   * @param code - the SAS code for the new job.
    */
-  public async createFile(
+  public async createJobDefinition(
     folderName: string,
-    fileName: string,
-    fileContent: string,
+    jobName: string,
+    code: string,
     accessToken?: string
   ) {
-    if (!this.rootFolder) {
-      await this.populateRootFolder(accessToken);
+    const parentFolder = await this.fetchOrCreateFolder(
+      folderName,
+      accessToken
+    );
+    console.log(parentFolder);
+    if (!parentFolder) {
+      throw new Error(
+        `The folder ${folderName} does not exist or could not be created.`
+      );
     }
 
-    if (!this.rootFolder) {
-      throw new Error("Root folder was not found");
-    }
+    const createJobDefinitionRequest: RequestInit = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/vnd.sas.job.definition+json",
+      },
+      body: JSON.stringify({
+        name: jobName,
+        code,
+      }),
+    };
+
+    return await this.request<Job>(
+      `${this.serverUrl}/jobDefinitions/definitions?parentFolderUri=${parentFolder.uri}`,
+      createJobDefinitionRequest
+    );
   }
 
   /**
@@ -474,10 +493,10 @@ export class SASViyaApiClient {
     if (!this.rootFolder) {
       throw new Error("Root folder was not found");
     }
-    if (!this.jobMap.size) {
-      await this.populateJobMap(accessToken);
+    if (!this.rootFolderMap.size) {
+      await this.populateRootFolderMap(accessToken);
     }
-    if (!this.jobMap.size) {
+    if (!this.rootFolderMap.size) {
       throw new Error(
         `The job ${sasJob} was not found in ${this.rootFolderName}`
       );
@@ -489,7 +508,7 @@ export class SASViyaApiClient {
     }
     const jobName = path.basename(sasJob);
     const jobFolder = sasJob.replace(`/${jobName}`, "");
-    const allJobsInFolder = this.jobMap.get(jobFolder);
+    const allJobsInFolder = this.rootFolderMap.get(jobFolder.replace("/", ""));
     if (allJobsInFolder) {
       const jobSpec = allJobsInFolder.find((j: Job) => j.name === jobName);
       const jobDefinitionLink = jobSpec?.links.find(
@@ -546,6 +565,7 @@ export class SASViyaApiClient {
         `${this.serverUrl}/jobExecution/jobs?_action=wait`,
         postJobRequest
       );
+      const jobStatus = await this.pollJobState(postedJob, accessToken, true);
       const currentJob = await this.request<Job>(
         `${this.serverUrl}/jobExecution/jobs/${postedJob.id}`,
         { headers }
@@ -560,14 +580,15 @@ export class SASViyaApiClient {
       }
 
       return postedJob;
+    } else {
+      throw new Error(
+        `The job ${sasJob} was not found at the location ${this.rootFolderName}`
+      );
     }
-    throw new Error(
-      `The job ${sasJob} was not found at the location ${this.rootFolderName}`
-    );
   }
 
-  private async populateJobMap(accessToken?: string) {
-    const allFiles = new Map<string, Job[]>();
+  private async populateRootFolderMap(accessToken?: string) {
+    const allItems = new Map<string, Job[]>();
     const url = "/folders/folders/@item?path=" + this.rootFolderName;
     const requestInfo: any = {
       method: "GET",
@@ -584,10 +605,8 @@ export class SASViyaApiClient {
       requestInfo
     );
 
-    const jobsAtRoot = members.items.filter(
-      (m: any) => m.contentType === "jobDefinition"
-    );
-    allFiles.set("", jobsAtRoot);
+    const itemsAtRoot = members.items;
+    allItems.set("", itemsAtRoot);
     const subfolderRequests = members.items
       .filter((i: any) => i.contentType === "folder")
       .map(async (member: any) => {
@@ -609,15 +628,13 @@ export class SASViyaApiClient {
           `${this.serverUrl}${membersLink!.href}`,
           requestInfo
         );
-        const jobsInFolder = memberContents.items.filter(
-          (i: any) => i.contentType === "jobDefinition"
-        ) as any[];
-        allFiles.set(member.name, jobsInFolder);
-        return jobsInFolder;
+        const itemsInFolder = memberContents.items as any[];
+        allItems.set(member.name, itemsInFolder);
+        return itemsInFolder;
       });
     await Promise.all(subfolderRequests);
 
-    this.jobMap = allFiles;
+    this.rootFolderMap = allItems;
   }
 
   private async populateRootFolder(accessToken?: string) {
@@ -694,9 +711,7 @@ export class SASViyaApiClient {
     if (accessToken) {
       headers.Authorization = `Bearer ${accessToken}`;
     }
-    if (this.csrfToken) {
-      headers[this.csrfToken.headerName] = this.csrfToken.value;
-    }
+
     for (const tableName in data) {
       const csv = convertToCSV(data[tableName]);
       if (csv === "ERROR: LARGE STRING LENGTH") {
@@ -720,11 +735,39 @@ export class SASViyaApiClient {
     }
     return uploadedFiles;
   }
+
+  private async fetchOrCreateFolder(folderName: string, accessToken?: string) {
+    if (!this.rootFolder) {
+      await this.populateRootFolder(accessToken);
+    }
+
+    if (!this.rootFolderMap.size) {
+      await this.populateRootFolderMap(accessToken);
+    }
+
+    if (!this.rootFolder) {
+      throw new Error("Root folder was not found");
+    }
+
+    const folderNameParts = folderName.split("/");
+
+    const currentFolder = this.rootFolderMap
+      .get("")
+      ?.find((x: any) => x.name === folderName);
+    return currentFolder;
+  }
+
   private async request<T>(
     url: string,
     options: RequestInit,
     contentType: "text" | "json" = "json"
   ) {
+    if (this.csrfToken) {
+      options.headers = {
+        ...options.headers,
+        [this.csrfToken.headerName]: this.csrfToken.value,
+      };
+    }
     return await makeRequest<T>(
       url,
       options,
