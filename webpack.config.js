@@ -4,6 +4,7 @@ const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 
 const browserConfig = {
   entry: "./src/index.ts",
+  devtool: "source-map",
   mode: "production",
   optimization: {
     minimize: true,
@@ -27,7 +28,14 @@ const browserConfig = {
     libraryTarget: "umd",
     library: "SASjs",
   },
-  plugins: [new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/)],
+  plugins: [
+    new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/),
+    new webpack.SourceMapDevToolPlugin({
+      filename: null,
+      exclude: [/node_modules/],
+      test: /\.ts($|\?)/i,
+    }),
+  ],
 };
 
 const nodeConfig = {
