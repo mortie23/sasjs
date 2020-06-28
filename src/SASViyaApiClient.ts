@@ -528,7 +528,7 @@ export class SASViyaApiClient {
       files.forEach((fileInfo, index) => {
         jobArguments[
           `_webin_fileuri${index + 1}`
-        ] = `/files/files/${fileInfo.file.id}`;
+        ] = `/files/files/${fileInfo.id}`;
         jobArguments[`_webin_name${index + 1}`] = fileInfo.tableName;
       });
 
