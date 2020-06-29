@@ -30,6 +30,7 @@ const defaultConfig: SASjsConfig = {
   appLoc: "/Public/seedapp",
   serverType: ServerType.SASViya,
   debug: true,
+  contextName: "SAS Job Execution compute context",
 };
 
 const requestRetryLimit = 5;
@@ -114,6 +115,30 @@ export default class SASjs {
       accessToken,
       sessionId,
       silent
+    );
+  }
+
+  public async createFolder(folderName: string, accessToken?: string) {
+    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
+      throw new Error("This operation is only supported on SAS Viya servers.");
+    }
+    return await this.sasViyaApiClient!.createFolder(folderName, accessToken);
+  }
+
+  public async createJobDefinition(
+    folderName: string,
+    jobName: string,
+    code: string,
+    accessToken?: string
+  ) {
+    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
+      throw new Error("This operation is only supported on SAS Viya servers.");
+    }
+    return await this.sasViyaApiClient!.createJobDefinition(
+      folderName,
+      jobName,
+      code,
+      accessToken
     );
   }
 
@@ -307,13 +332,13 @@ export default class SASjs {
   }
 
   /**
-   * Makes a request to the SAS Service specified in `SASjob`.  The response 
-   * object will always contain table names in lowercase, and column names in 
+   * Makes a request to the SAS Service specified in `SASjob`.  The response
+   * object will always contain table names in lowercase, and column names in
    * uppercase.  Values are returned formatted by default, unformatted
    * values can be configured as an option in the `%webout` macro.
-   * 
-   * @param SASjob - The path to the SAS program (ultimately resolves to
-   *  the SAS `_program` parameter to run a Job Definition or SAS 9 Stored 
+   *
+   * @param sasJob - The path to the SAS program (ultimately resolves to
+   *  the SAS `_program` parameter to run a Job Definition or SAS 9 Stored
    *  Process.)  Is prepended at runtime with the value of `appLoc`.
    * @param data - A JSON object containing one or more tables to be sent to
    * SAS.  Can be `null` if no inputs required.
@@ -324,16 +349,60 @@ export default class SASjs {
    * resubmitted after logon.
    */
   public async request(
-    SASjob: string,
+    sasJob: string,
     data: any,
     params?: any,
-    loginRequiredCallback?: any
+    loginRequiredCallback?: any,
+    accessToken?: string
   ) {
+    const sasjsWaitingRequest: SASjsWaitingRequest = {
+      requestPromise: {
+        promise: null,
+        resolve: null,
+        reject: null,
+      },
+      SASjob: sasJob,
+      data,
+      params,
+    };
+    let logInRequired = false;
+
+    // if (
+    //   this.sasjsConfig.serverType === ServerType.SASViya &&
+    //   this.sasjsConfig.contextName
+    // ) {
+    //   sasjsWaitingRequest.requestPromise.promise = new Promise(
+    //     async (resolve, reject) => {
+    //       const session = await this.checkSession();
+
+    //       if (!session.isLoggedIn) {
+    //         if (loginRequiredCallback) loginRequiredCallback(true);
+    //         logInRequired = true;
+    //         sasjsWaitingRequest.requestPromise.resolve = resolve;
+    //         sasjsWaitingRequest.requestPromise.reject = reject;
+    //         this.sasjsWaitingRequests.push(sasjsWaitingRequest);
+    //       } else {
+    //         resolve(
+    //           await this.sasViyaApiClient?.executeJob(
+    //             sasJob,
+    //             this.sasjsConfig.contextName,
+    //             this.sasjsConfig.debug,
+    //             data,
+    //             accessToken
+    //           )
+    //         );
+    //       }
+    //     }
+    //   );
+    //   return sasjsWaitingRequest.requestPromise.promise;
+    // } else {
     const program = this.sasjsConfig.appLoc
-      ? this.sasjsConfig.appLoc.replace(/\/?$/, "/") +
-      SASjob.replace(/^\//, "")
-      : SASjob;
-    const apiUrl = `${this.sasjsConfig.serverUrl}${this.jobsPath}/?_program=${program}`;
+      ? this.sasjsConfig.appLoc.replace(/\/?$/, "/") + sasJob.replace(/^\//, "")
+      : sasJob;
+    const jobUri = this.sasjsConfig.serverType === 'SASVIYA' ? await this.getJobUri(sasJob) : '';
+    const apiUrl = `${this.sasjsConfig.serverUrl}${this.jobsPath}/?${
+      jobUri.length > 0 ? "__program=" + program + "&_job=" + jobUri : "_program=" + program
+    }`;
 
     const inputParams = params ? params : {};
     const requestParams = {
@@ -345,7 +414,6 @@ export default class SASjs {
 
     const formData = new FormData();
 
-    let logInRequired = false;
     let isError = false;
     let errorMsg = "";
 
@@ -407,17 +475,6 @@ export default class SASjs {
       }
     }
 
-    const sasjsWaitingRequest: SASjsWaitingRequest = {
-      requestPromise: {
-        promise: null,
-        resolve: null,
-        reject: null,
-      },
-      SASjob,
-      data,
-      params,
-    };
-
     let isRedirected = false;
 
     sasjsWaitingRequest.requestPromise.promise = new Promise(
@@ -459,7 +516,7 @@ export default class SASjs {
             ) {
               if (this.retryCount < requestRetryLimit) {
                 this.retryCount++;
-                this.request(SASjob, data, params).then(
+                this.request(sasJob, data, params).then(
                   (res: any) => resolve(res),
                   (err: any) => reject(err)
                 );
@@ -532,6 +589,7 @@ export default class SASjs {
     );
 
     return sasjsWaitingRequest.requestPromise.promise;
+    // }
   }
 
   private async resendWaitingRequests() {
@@ -600,6 +658,27 @@ export default class SASjs {
         reject("No debug info in response");
       }
     });
+  }
+
+  private async getJobUri(sasJob: string) {
+    const jobMap: any = await this.sasViyaApiClient!.getAppLocMap();
+    let uri = "";
+
+    if (jobMap.size) {
+      const jobKey = sasJob.split("/")[0];
+      const jobName = sasJob.split("/")[1];
+
+      const locJobs = jobMap.get(jobKey);
+      if (locJobs) {
+        const job = locJobs.find(
+          (el: any) => el.name === jobName && el.contentType === "jobDefinition"
+        );
+        if (job) {
+          uri = job.uri;
+        }
+      }
+    }
+    return uri;
   }
 
   private parseSAS9Response(response: string) {
@@ -757,7 +836,10 @@ export default class SASjs {
         : "/SASLogon/logout.do?";
 
     if (this.sasjsConfig.serverType === ServerType.SASViya) {
-      this.sasViyaApiClient = new SASViyaApiClient(this.sasjsConfig.serverUrl);
+      this.sasViyaApiClient = new SASViyaApiClient(
+        this.sasjsConfig.serverUrl,
+        this.sasjsConfig.appLoc
+      );
     }
     if (this.sasjsConfig.serverType === ServerType.SAS9) {
       this.sas9ApiClient = new SAS9ApiClient(this.sasjsConfig.serverUrl);

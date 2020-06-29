@@ -14,7 +14,7 @@ export class SASjsConfig {
   pathSAS9: string = "";
   pathSASViya: string = "";
   /**
-   * The appLoc is the parent folder under which the SAS services (STPs or Job 
+   * The appLoc is the parent folder under which the SAS services (STPs or Job
    * Execution Services) are stored.
    */
   appLoc: string = "";
@@ -26,4 +26,5 @@ export class SASjsConfig {
    * Set to `true` to enable additional debugging.
    */
   debug: boolean = true;
+  contextName: string = "";
 }

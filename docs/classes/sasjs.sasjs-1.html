@@ -101,6 +101,8 @@
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="sasjs.sasjs-1.html#checksession" class="tsd-kind-icon">checkSession</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="sasjs.sasjs-1.html#createfolder" class="tsd-kind-icon">createFolder</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="sasjs.sasjs-1.html#createjobdefinition" class="tsd-kind-icon">createJobDefinition</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="sasjs.sasjs-1.html#createsession" class="tsd-kind-icon">createSession</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="sasjs.sasjs-1.html#deleteclient" class="tsd-kind-icon">deleteClient</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="sasjs.sasjs-1.html#executescriptsas9" class="tsd-kind-icon">executeScriptSAS9</a></li>
@@ -136,7 +138,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:52</li>
+									<li>Defined in SASjs.ts:53</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -162,7 +164,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:213</li>
+									<li>Defined in SASjs.ts:238</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -175,16 +177,74 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="createsession" class="tsd-anchor"></a>
-					<h3>create<wbr>Session</h3>
+					<a name="createfolder" class="tsd-anchor"></a>
+					<h3>create<wbr>Folder</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Session<span class="tsd-signature-symbol">(</span>contextName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, accessToken<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Folder<span class="tsd-signature-symbol">(</span>folderName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, accessToken<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/folder.folder-1.html" class="tsd-signature-type">Folder</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:92</li>
+									<li>Defined in SASjs.ts:121</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>folderName: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> accessToken: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/folder.folder-1.html" class="tsd-signature-type">Folder</a><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="createjobdefinition" class="tsd-anchor"></a>
+					<h3>create<wbr>Job<wbr>Definition</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Job<wbr>Definition<span class="tsd-signature-symbol">(</span>folderName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, jobName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, code<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, accessToken<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/job.job-1.html" class="tsd-signature-type">Job</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in SASjs.ts:128</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>folderName: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>jobName: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>code: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> accessToken: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/job.job-1.html" class="tsd-signature-type">Job</a><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="createsession" class="tsd-anchor"></a>
+					<h3>create<wbr>Session</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Session<span class="tsd-signature-symbol">(</span>contextName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, accessToken<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/session.session-1.html" class="tsd-signature-type">Session</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in SASjs.ts:93</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -196,7 +256,7 @@
 									<h5>accessToken: <span class="tsd-signature-type">string</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/session.session-1.html" class="tsd-signature-type">Session</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -204,13 +264,13 @@
 					<a name="deleteclient" class="tsd-anchor"></a>
 					<h3>delete<wbr>Client</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">delete<wbr>Client<span class="tsd-signature-symbol">(</span>clientId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, accessToken<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">delete<wbr>Client<span class="tsd-signature-symbol">(</span>clientId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, accessToken<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:157</li>
+									<li>Defined in SASjs.ts:182</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -222,7 +282,7 @@
 									<h5>accessToken: <span class="tsd-signature-type">string</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -236,7 +296,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:63</li>
+									<li>Defined in SASjs.ts:64</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -265,7 +325,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:99</li>
+									<li>Defined in SASjs.ts:100</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -303,7 +363,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:127</li>
+									<li>Defined in SASjs.ts:152</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -326,13 +386,13 @@
 					<a name="getallcontexts" class="tsd-anchor"></a>
 					<h3>get<wbr>All<wbr>Contexts</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>All<wbr>Contexts<span class="tsd-signature-symbol">(</span>accessToken<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>All<wbr>Contexts<span class="tsd-signature-symbol">(</span>accessToken<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:78</li>
+									<li>Defined in SASjs.ts:79</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -341,7 +401,7 @@
 									<h5>accessToken: <span class="tsd-signature-type">string</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -355,7 +415,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:120</li>
+									<li>Defined in SASjs.ts:145</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -378,7 +438,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:184</li>
+									<li>Defined in SASjs.ts:209</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -402,7 +462,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:85</li>
+									<li>Defined in SASjs.ts:86</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -425,7 +485,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:728</li>
+									<li>Defined in SASjs.ts:807</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../interfaces/sasjsrequest.sasjsrequest-1.html" class="tsd-signature-type">SASjsRequest</a><span class="tsd-signature-symbol">[]</span></h4>
@@ -442,7 +502,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:168</li>
+									<li>Defined in SASjs.ts:193</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -463,7 +523,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:176</li>
+									<li>Defined in SASjs.ts:201</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -484,7 +544,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:229</li>
+									<li>Defined in SASjs.ts:254</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -520,7 +580,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:298</li>
+									<li>Defined in SASjs.ts:323</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -541,7 +601,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:142</li>
+									<li>Defined in SASjs.ts:167</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -564,13 +624,13 @@
 					<a name="request" class="tsd-anchor"></a>
 					<h3>request</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">request<span class="tsd-signature-symbol">(</span>SASjob<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, params<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span>, loginRequiredCallback<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">request<span class="tsd-signature-symbol">(</span>sasJob<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, params<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span>, loginRequiredCallback<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span>, accessToken<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:326</li>
+									<li>Defined in SASjs.ts:351</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -583,7 +643,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>SASjob: <span class="tsd-signature-type">string</span></h5>
+									<h5>sasJob: <span class="tsd-signature-type">string</span></h5>
 									<div class="tsd-comment tsd-typography tsd-comment-text">
 										<p>The path to the SAS program (ultimately resolves to
 											the SAS <code>_program</code> parameter to run a Job Definition or SAS 9 Stored
@@ -612,6 +672,9 @@
 										resubmitted after logon.</p>
 									</div>
 								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> accessToken: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
@@ -627,7 +690,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:205</li>
+									<li>Defined in SASjs.ts:230</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -658,7 +721,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:192</li>
+									<li>Defined in SASjs.ts:217</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -679,7 +742,7 @@
 					</ul>
 				</section>
 			</section>
-			<!--{&quot;options&quot;:&quot;/home/mihajlo/shared-projects/macro-people/sasjs&quot;,&quot;tsconfig&quot;:&quot;/home/mihajlo/shared-projects/macro-people/sasjs&quot;,&quot;inputFiles&quot;:[&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/SAS9ApiClient.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/SASViyaApiClient.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/SASjs.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/index.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/types/SASjsConfig.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/types/SASjsRequest.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/types/SASjsWaitingRequest.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/types/ServerType.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/types/index.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/compareTimestamps.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/convertToCsv.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/index.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/isAuthorizeFormRequired.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/isLoginRequired.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/isLoginSuccess.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/needsRetry.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/parseAndSubmitAuthorizeForm.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/parseGeneratedCode.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/parseSourceCode.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/serialize.ts&quot;,&quot;/home/mihajlo/shared-projects/macro-people/sasjs/src/utils/splitChunks.ts&quot;],&quot;mode&quot;:1,&quot;includeDeclarations&quot;:true,&quot;entryPoint&quot;:&quot;&quot;,&quot;exclude&quot;:[&quot;**/*+(index|.spec|.e2e).ts&quot;],&quot;externalPattern&quot;:[],&quot;excludeExternals&quot;:true,&quot;excludeNotExported&quot;:true,&quot;excludeNotDocumented&quot;:false,&quot;excludePrivate&quot;:true,&quot;excludeProtected&quot;:false,&quot;ignoreCompilerErrors&quot;:true,&quot;disableSources&quot;:false,&quot;includes&quot;:&quot;&quot;,&quot;media&quot;:&quot;&quot;,&quot;out&quot;:&quot;docs&quot;,&quot;json&quot;:&quot;&quot;,&quot;theme&quot;:&quot;./node_modules/typedoc-neo-theme/bin/default&quot;,&quot;name&quot;:&quot;&quot;,&quot;includeVersion&quot;:false,&quot;excludeTags&quot;:[],&quot;readme&quot;:&quot;&quot;,&quot;defaultCategory&quot;:&quot;Other&quot;,&quot;categoryOrder&quot;:[],&quot;categorizeByGroup&quot;:true,&quot;gitRevision&quot;:&quot;&quot;,&quot;gitRemote&quot;:&quot;origin&quot;,&quot;gaID&quot;:&quot;&quot;,&quot;gaSite&quot;:&quot;auto&quot;,&quot;hideGenerator&quot;:false,&quot;toc&quot;:[],&quot;disableOutputCheck&quot;:true,&quot;help&quot;:false,&quot;version&quot;:false,&quot;plugin&quot;:[],&quot;logger&quot;:&quot;console&quot;,&quot;listInvalidSymbolLinks&quot;:false,&quot;links&quot;:[{&quot;label&quot;:&quot;SASjs on Github&quot;,&quot;url&quot;:&quot;https://github.com/macropeople/sasjs&quot;},{&quot;label&quot;:&quot;SASjs.io&quot;,&quot;url&quot;:&quot;https://sasjs.io&quot;},{&quot;label&quot;:&quot;SASjs CLI&quot;,&quot;url&quot;:&quot;https://github.com/macropeople/sasjs-cli&quot;},{&quot;label&quot;:&quot;React Seed App&quot;,&quot;url&quot;:&quot;https://github.com/macropeople/react-seed-app&quot;}],&quot;outline&quot;:[{&quot;SAS Adapter&quot;:{&quot;SASjs&quot;:&quot;modules/sasjs&quot;,&quot;SASjsConfig&quot;:&quot;classes/sasjsconfig.sasjsconfig-1&quot;,&quot;ServerType&quot;:&quot;enums/servertype.servertype-1&quot;,&quot;SASjsRequest&quot;:&quot;interfaces/sasjsrequest.sasjsrequest-1&quot;,&quot;SASjsWaitingRequest&quot;:&quot;interfaces/sasjswaitingrequest.sasjswaitingrequest-1&quot;},&quot;SAS Viya API Client&quot;:&quot;classes/sasviyaapiclient.sasviyaapiclient-1&quot;,&quot;SAS 9 API Client&quot;:&quot;classes/sas9apiclient.sas9apiclient-1&quot;}],&quot;disableAutoModuleName&quot;:&quot;false&quot;}-->
+			<!--{&quot;options&quot;:&quot;/Users/allan/git/sasjs&quot;,&quot;tsconfig&quot;:&quot;/Users/allan/git/sasjs&quot;,&quot;inputFiles&quot;:[&quot;/Users/allan/git/sasjs/src/SAS9ApiClient.ts&quot;,&quot;/Users/allan/git/sasjs/src/SASViyaApiClient.ts&quot;,&quot;/Users/allan/git/sasjs/src/SASjs.ts&quot;,&quot;/Users/allan/git/sasjs/src/index.ts&quot;,&quot;/Users/allan/git/sasjs/src/types/Context.ts&quot;,&quot;/Users/allan/git/sasjs/src/types/CsrfToken.ts&quot;,&quot;/Users/allan/git/sasjs/src/types/Folder.ts&quot;,&quot;/Users/allan/git/sasjs/src/types/Job.ts&quot;,&quot;/Users/allan/git/sasjs/src/types/JobResult.ts&quot;,&quot;/Users/allan/git/sasjs/src/types/Link.ts&quot;,&quot;/Users/allan/git/sasjs/src/types/SASjsConfig.ts&quot;,&quot;/Users/allan/git/sasjs/src/types/SASjsRequest.ts&quot;,&quot;/Users/allan/git/sasjs/src/types/SASjsWaitingRequest.ts&quot;,&quot;/Users/allan/git/sasjs/src/types/ServerType.ts&quot;,&quot;/Users/allan/git/sasjs/src/types/Session.ts&quot;,&quot;/Users/allan/git/sasjs/src/types/index.ts&quot;,&quot;/Users/allan/git/sasjs/src/utils/compareTimestamps.ts&quot;,&quot;/Users/allan/git/sasjs/src/utils/convertToCsv.ts&quot;,&quot;/Users/allan/git/sasjs/src/utils/index.ts&quot;,&quot;/Users/allan/git/sasjs/src/utils/isAuthorizeFormRequired.ts&quot;,&quot;/Users/allan/git/sasjs/src/utils/isLoginRequired.ts&quot;,&quot;/Users/allan/git/sasjs/src/utils/isLoginSuccess.ts&quot;,&quot;/Users/allan/git/sasjs/src/utils/makeRequest.ts&quot;,&quot;/Users/allan/git/sasjs/src/utils/needsRetry.ts&quot;,&quot;/Users/allan/git/sasjs/src/utils/parseAndSubmitAuthorizeForm.ts&quot;,&quot;/Users/allan/git/sasjs/src/utils/parseGeneratedCode.ts&quot;,&quot;/Users/allan/git/sasjs/src/utils/parseSasViyaLog.ts&quot;,&quot;/Users/allan/git/sasjs/src/utils/parseSourceCode.ts&quot;,&quot;/Users/allan/git/sasjs/src/utils/serialize.ts&quot;,&quot;/Users/allan/git/sasjs/src/utils/splitChunks.ts&quot;],&quot;mode&quot;:1,&quot;includeDeclarations&quot;:true,&quot;entryPoint&quot;:&quot;&quot;,&quot;exclude&quot;:[&quot;**/*+(index|.spec|.e2e).ts&quot;],&quot;externalPattern&quot;:[],&quot;excludeExternals&quot;:true,&quot;excludeNotExported&quot;:true,&quot;excludeNotDocumented&quot;:false,&quot;excludePrivate&quot;:true,&quot;excludeProtected&quot;:false,&quot;ignoreCompilerErrors&quot;:true,&quot;disableSources&quot;:false,&quot;includes&quot;:&quot;&quot;,&quot;media&quot;:&quot;&quot;,&quot;out&quot;:&quot;docs&quot;,&quot;json&quot;:&quot;&quot;,&quot;theme&quot;:&quot;./node_modules/typedoc-neo-theme/bin/default&quot;,&quot;name&quot;:&quot;&quot;,&quot;includeVersion&quot;:false,&quot;excludeTags&quot;:[],&quot;readme&quot;:&quot;&quot;,&quot;defaultCategory&quot;:&quot;Other&quot;,&quot;categoryOrder&quot;:[],&quot;categorizeByGroup&quot;:true,&quot;gitRevision&quot;:&quot;&quot;,&quot;gitRemote&quot;:&quot;origin&quot;,&quot;gaID&quot;:&quot;&quot;,&quot;gaSite&quot;:&quot;auto&quot;,&quot;hideGenerator&quot;:false,&quot;toc&quot;:[],&quot;disableOutputCheck&quot;:true,&quot;help&quot;:false,&quot;version&quot;:false,&quot;plugin&quot;:[],&quot;logger&quot;:&quot;console&quot;,&quot;listInvalidSymbolLinks&quot;:false,&quot;links&quot;:[{&quot;label&quot;:&quot;SASjs on Github&quot;,&quot;url&quot;:&quot;https://github.com/macropeople/sasjs&quot;},{&quot;label&quot;:&quot;SASjs.io&quot;,&quot;url&quot;:&quot;https://sasjs.io&quot;},{&quot;label&quot;:&quot;SASjs CLI&quot;,&quot;url&quot;:&quot;https://github.com/macropeople/sasjs-cli&quot;},{&quot;label&quot;:&quot;React Seed App&quot;,&quot;url&quot;:&quot;https://github.com/macropeople/react-seed-app&quot;}],&quot;outline&quot;:[{&quot;SAS Adapter&quot;:{&quot;SASjs&quot;:&quot;modules/sasjs&quot;,&quot;SASjsConfig&quot;:&quot;classes/sasjsconfig.sasjsconfig-1&quot;,&quot;ServerType&quot;:&quot;enums/servertype.servertype-1&quot;,&quot;SASjsRequest&quot;:&quot;interfaces/sasjsrequest.sasjsrequest-1&quot;,&quot;SASjsWaitingRequest&quot;:&quot;interfaces/sasjswaitingrequest.sasjswaitingrequest-1&quot;},&quot;SAS Viya API Client&quot;:&quot;classes/sasviyaapiclient.sasviyaapiclient-1&quot;,&quot;SAS 9 API Client&quot;:&quot;classes/sas9apiclient.sas9apiclient-1&quot;}],&quot;disableAutoModuleName&quot;:&quot;false&quot;}-->
 		</div>
 		<div class="col-2 col-menu secondary-menu">
 			<nav class="tsd-navigation secondary menu-sticky">
@@ -694,6 +757,12 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="sasjs.sasjs-1.html#checksession" class="tsd-kind-icon">check<wbr>Session</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="sasjs.sasjs-1.html#createfolder" class="tsd-kind-icon">create<wbr>Folder</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="sasjs.sasjs-1.html#createjobdefinition" class="tsd-kind-icon">create<wbr>Job<wbr>Definition</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="sasjs.sasjs-1.html#createsession" class="tsd-kind-icon">create<wbr>Session</a>

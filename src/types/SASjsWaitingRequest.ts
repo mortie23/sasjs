@@ -1,3 +1,7 @@
+/**
+ * Represents requests that are queued, pending a signon event
+ *
+ */
 export interface SASjsWaitingRequest {
   requestPromise: {
     promise: any;
