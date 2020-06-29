@@ -401,7 +401,7 @@ export default class SASjs {
       : sasJob;
     const jobUri = await this.getJobUri(sasJob);
     const apiUrl = `${this.sasjsConfig.serverUrl}${this.jobsPath}/?${
-      jobUri.length > 0 ? "_job=" + jobUri : ""
+      jobUri.length > 0 ? "_job=" + jobUri : "_program=" + program
     }`;
 
     const inputParams = params ? params : {};
