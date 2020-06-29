@@ -367,229 +367,233 @@ export default class SASjs {
     };
     let logInRequired = false;
 
-    if (
-      this.sasjsConfig.serverType === ServerType.SASViya &&
-      this.sasjsConfig.contextName
-    ) {
-      sasjsWaitingRequest.requestPromise.promise = new Promise(
-        async (resolve, reject) => {
-          const session = await this.checkSession();
+    // if (
+    //   this.sasjsConfig.serverType === ServerType.SASViya &&
+    //   this.sasjsConfig.contextName
+    // ) {
+    //   sasjsWaitingRequest.requestPromise.promise = new Promise(
+    //     async (resolve, reject) => {
+    //       const session = await this.checkSession();
 
-          if (!session.isLoggedIn) {
-            if (loginRequiredCallback) loginRequiredCallback(true);
-            logInRequired = true;
-            sasjsWaitingRequest.requestPromise.resolve = resolve;
-            sasjsWaitingRequest.requestPromise.reject = reject;
-            this.sasjsWaitingRequests.push(sasjsWaitingRequest);
-          } else {
-            resolve(
-              await this.sasViyaApiClient?.executeJob(
-                sasJob,
-                this.sasjsConfig.contextName,
-                this.sasjsConfig.debug,
-                data,
-                accessToken
-              )
-            );
-          }
-        }
-      );
-      return sasjsWaitingRequest.requestPromise.promise;
-    } else {
-      const program = this.sasjsConfig.appLoc
-        ? this.sasjsConfig.appLoc.replace(/\/?$/, "/") +
-          sasJob.replace(/^\//, "")
-        : sasJob;
-      const apiUrl = `${this.sasjsConfig.serverUrl}${this.jobsPath}/?_program=${program}`;
+    //       if (!session.isLoggedIn) {
+    //         if (loginRequiredCallback) loginRequiredCallback(true);
+    //         logInRequired = true;
+    //         sasjsWaitingRequest.requestPromise.resolve = resolve;
+    //         sasjsWaitingRequest.requestPromise.reject = reject;
+    //         this.sasjsWaitingRequests.push(sasjsWaitingRequest);
+    //       } else {
+    //         resolve(
+    //           await this.sasViyaApiClient?.executeJob(
+    //             sasJob,
+    //             this.sasjsConfig.contextName,
+    //             this.sasjsConfig.debug,
+    //             data,
+    //             accessToken
+    //           )
+    //         );
+    //       }
+    //     }
+    //   );
+    //   return sasjsWaitingRequest.requestPromise.promise;
+    // } else {
+    const program = this.sasjsConfig.appLoc
+      ? this.sasjsConfig.appLoc.replace(/\/?$/, "/") + sasJob.replace(/^\//, "")
+      : sasJob;
+    const jobUri = await this.getJobUri(sasJob);
+    const apiUrl = `${this.sasjsConfig.serverUrl}${this.jobsPath}/?${
+      jobUri.length > 0 ? "_job=" + jobUri : ""
+    }`;
 
-      const inputParams = params ? params : {};
-      const requestParams = {
-        ...inputParams,
-        ...this.getRequestParams(),
-      };
+    const inputParams = params ? params : {};
+    const requestParams = {
+      ...inputParams,
+      ...this.getRequestParams(),
+    };
 
-      const self = this;
+    if (jobUri.length > 0) {
+      requestParams["__program"] = program;
+    }
 
-      const formData = new FormData();
+    const self = this;
 
-      let isError = false;
-      let errorMsg = "";
+    const formData = new FormData();
 
-      if (data) {
-        if (this.sasjsConfig.serverType === ServerType.SAS9) {
-          // file upload approach
-          for (const tableName in data) {
-            if (isError) {
-              return;
-            }
-            const name = tableName;
-            const csv = convertToCSV(data[tableName]);
-            if (csv === "ERROR: LARGE STRING LENGTH") {
-              isError = true;
-              errorMsg =
-                "The max length of a string value in SASjs is 32765 characters.";
-            }
+    let isError = false;
+    let errorMsg = "";
 
-            formData.append(
-              name,
-              new Blob([csv], { type: "application/csv" }),
-              `${name}.csv`
-            );
-          }
-        } else {
-          // param based approach
-          const sasjsTables = [];
-          let tableCounter = 0;
-          for (const tableName in data) {
-            if (isError) {
-              return;
-            }
-            tableCounter++;
-            sasjsTables.push(tableName);
-            const csv = convertToCSV(data[tableName]);
-            if (csv === "ERROR: LARGE STRING LENGTH") {
-              isError = true;
-              errorMsg =
-                "The max length of a string value in SASjs is 32765 characters.";
-            }
-            // if csv has length more then 16k, send in chunks
-            if (csv.length > 16000) {
-              const csvChunks = splitChunks(csv);
-              // append chunks to form data with same key
-              csvChunks.map((chunk) => {
-                formData.append(`sasjs${tableCounter}data`, chunk);
-              });
-            } else {
-              requestParams[`sasjs${tableCounter}data`] = csv;
-            }
-          }
-          requestParams["sasjs_tables"] = sasjsTables.join(" ");
-        }
-      }
-
-      for (const key in requestParams) {
-        if (requestParams.hasOwnProperty(key)) {
-          formData.append(key, requestParams[key]);
-        }
-      }
-
-      let isRedirected = false;
-
-      sasjsWaitingRequest.requestPromise.promise = new Promise(
-        (resolve, reject) => {
+    if (data) {
+      if (this.sasjsConfig.serverType === ServerType.SAS9) {
+        // file upload approach
+        for (const tableName in data) {
           if (isError) {
-            reject({ MESSAGE: errorMsg });
+            return;
           }
-          fetch(apiUrl, {
-            method: "POST",
-            body: formData,
-            referrerPolicy: "same-origin",
+          const name = tableName;
+          const csv = convertToCSV(data[tableName]);
+          if (csv === "ERROR: LARGE STRING LENGTH") {
+            isError = true;
+            errorMsg =
+              "The max length of a string value in SASjs is 32765 characters.";
+          }
+
+          formData.append(
+            name,
+            new Blob([csv], { type: "application/csv" }),
+            `${name}.csv`
+          );
+        }
+      } else {
+        // param based approach
+        const sasjsTables = [];
+        let tableCounter = 0;
+        for (const tableName in data) {
+          if (isError) {
+            return;
+          }
+          tableCounter++;
+          sasjsTables.push(tableName);
+          const csv = convertToCSV(data[tableName]);
+          if (csv === "ERROR: LARGE STRING LENGTH") {
+            isError = true;
+            errorMsg =
+              "The max length of a string value in SASjs is 32765 characters.";
+          }
+          // if csv has length more then 16k, send in chunks
+          if (csv.length > 16000) {
+            const csvChunks = splitChunks(csv);
+            // append chunks to form data with same key
+            csvChunks.map((chunk) => {
+              formData.append(`sasjs${tableCounter}data`, chunk);
+            });
+          } else {
+            requestParams[`sasjs${tableCounter}data`] = csv;
+          }
+        }
+        requestParams["sasjs_tables"] = sasjsTables.join(" ");
+      }
+    }
+
+    for (const key in requestParams) {
+      if (requestParams.hasOwnProperty(key)) {
+        formData.append(key, requestParams[key]);
+      }
+    }
+
+    let isRedirected = false;
+
+    sasjsWaitingRequest.requestPromise.promise = new Promise(
+      (resolve, reject) => {
+        if (isError) {
+          reject({ MESSAGE: errorMsg });
+        }
+        fetch(apiUrl, {
+          method: "POST",
+          body: formData,
+          referrerPolicy: "same-origin",
+        })
+          .then(async (response) => {
+            if (!response.ok) {
+              if (response.status === 403) {
+                const tokenHeader = response.headers.get("X-CSRF-HEADER");
+
+                if (tokenHeader) {
+                  const token = response.headers.get(tokenHeader);
+
+                  this._csrf = token;
+                }
+              }
+            }
+
+            if (
+              response.redirected &&
+              this.sasjsConfig.serverType === ServerType.SAS9
+            ) {
+              isRedirected = true;
+            }
+
+            return response.text();
           })
-            .then(async (response) => {
-              if (!response.ok) {
-                if (response.status === 403) {
-                  const tokenHeader = response.headers.get("X-CSRF-HEADER");
-
-                  if (tokenHeader) {
-                    const token = response.headers.get(tokenHeader);
-
-                    this._csrf = token;
-                  }
-                }
-              }
-
-              if (
-                response.redirected &&
-                this.sasjsConfig.serverType === ServerType.SAS9
-              ) {
-                isRedirected = true;
-              }
-
-              return response.text();
-            })
-            .then((responseText) => {
-              if (
-                (needsRetry(responseText) || isRedirected) &&
-                !isLogInRequired(responseText)
-              ) {
-                if (this.retryCount < requestRetryLimit) {
-                  this.retryCount++;
-                  this.request(sasJob, data, params).then(
-                    (res: any) => resolve(res),
-                    (err: any) => reject(err)
-                  );
-                } else {
-                  this.retryCount = 0;
-                  reject(responseText);
-                }
+          .then((responseText) => {
+            if (
+              (needsRetry(responseText) || isRedirected) &&
+              !isLogInRequired(responseText)
+            ) {
+              if (this.retryCount < requestRetryLimit) {
+                this.retryCount++;
+                this.request(sasJob, data, params).then(
+                  (res: any) => resolve(res),
+                  (err: any) => reject(err)
+                );
               } else {
                 this.retryCount = 0;
-                this.parseLogFromResponse(responseText, program);
+                reject(responseText);
+              }
+            } else {
+              this.retryCount = 0;
+              this.parseLogFromResponse(responseText, program);
 
-                if (isLogInRequired(responseText)) {
-                  if (loginRequiredCallback) loginRequiredCallback(true);
-                  logInRequired = true;
-                  sasjsWaitingRequest.requestPromise.resolve = resolve;
-                  sasjsWaitingRequest.requestPromise.reject = reject;
-                  this.sasjsWaitingRequests.push(sasjsWaitingRequest);
-                } else {
-                  if (
-                    this.sasjsConfig.serverType === ServerType.SAS9 &&
-                    this.sasjsConfig.debug
-                  ) {
-                    this.updateUsername(responseText);
-                    const jsonResponseText = this.parseSAS9Response(
-                      responseText
-                    );
+              if (isLogInRequired(responseText)) {
+                if (loginRequiredCallback) loginRequiredCallback(true);
+                logInRequired = true;
+                sasjsWaitingRequest.requestPromise.resolve = resolve;
+                sasjsWaitingRequest.requestPromise.reject = reject;
+                this.sasjsWaitingRequests.push(sasjsWaitingRequest);
+              } else {
+                if (
+                  this.sasjsConfig.serverType === ServerType.SAS9 &&
+                  this.sasjsConfig.debug
+                ) {
+                  this.updateUsername(responseText);
+                  const jsonResponseText = this.parseSAS9Response(responseText);
 
-                    if (jsonResponseText !== "") {
-                      resolve(JSON.parse(jsonResponseText));
-                    } else {
-                      reject({
-                        MESSAGE: this.parseSAS9ErrorResponse(responseText),
-                      });
-                    }
-                  } else if (
-                    this.sasjsConfig.serverType === ServerType.SASViya &&
-                    this.sasjsConfig.debug
-                  ) {
-                    try {
-                      this.parseSASVIYADebugResponse(responseText).then(
-                        (resText: any) => {
-                          this.updateUsername(resText);
-                          try {
-                            resolve(JSON.parse(resText));
-                          } catch (e) {
-                            reject({ MESSAGE: resText });
-                          }
-                        },
-                        (err: any) => {
-                          reject({ MESSAGE: err });
-                        }
-                      );
-                    } catch (e) {
-                      reject({ MESSAGE: responseText });
-                    }
+                  if (jsonResponseText !== "") {
+                    resolve(JSON.parse(jsonResponseText));
                   } else {
-                    this.updateUsername(responseText);
-                    try {
-                      const parsedJson = JSON.parse(responseText);
-                      resolve(parsedJson);
-                    } catch (e) {
-                      reject({ MESSAGE: responseText });
-                    }
+                    reject({
+                      MESSAGE: this.parseSAS9ErrorResponse(responseText),
+                    });
+                  }
+                } else if (
+                  this.sasjsConfig.serverType === ServerType.SASViya &&
+                  this.sasjsConfig.debug
+                ) {
+                  try {
+                    this.parseSASVIYADebugResponse(responseText).then(
+                      (resText: any) => {
+                        this.updateUsername(resText);
+                        try {
+                          resolve(JSON.parse(resText));
+                        } catch (e) {
+                          reject({ MESSAGE: resText });
+                        }
+                      },
+                      (err: any) => {
+                        reject({ MESSAGE: err });
+                      }
+                    );
+                  } catch (e) {
+                    reject({ MESSAGE: responseText });
+                  }
+                } else {
+                  this.updateUsername(responseText);
+                  try {
+                    const parsedJson = JSON.parse(responseText);
+                    resolve(parsedJson);
+                  } catch (e) {
+                    reject({ MESSAGE: responseText });
                   }
                 }
               }
-            })
-            .catch((e: Error) => {
-              reject(e);
-            });
-        }
-      );
+            }
+          })
+          .catch((e: Error) => {
+            reject(e);
+          });
+      }
+    );
 
-      return sasjsWaitingRequest.requestPromise.promise;
-    }
+    return sasjsWaitingRequest.requestPromise.promise;
+    // }
   }
 
   private async resendWaitingRequests() {
@@ -658,6 +662,27 @@ export default class SASjs {
         reject("No debug info in response");
       }
     });
+  }
+
+  private async getJobUri(sasJob: string) {
+    const jobMap: any = await this.sasViyaApiClient!.getAppLocMap();
+    let uri = "";
+
+    if (jobMap.size) {
+      const jobKey = sasJob.split("/")[0];
+      const jobName = sasJob.split("/")[1];
+
+      const locJobs = jobMap.get(jobKey);
+      if (locJobs) {
+        const job = locJobs.find(
+          (el: any) => el.name === jobName && el.contentType === "jobDefinition"
+        );
+        if (job) {
+          uri = job.uri;
+        }
+      }
+    }
+    return uri;
   }
 
   private parseSAS9Response(response: string) {

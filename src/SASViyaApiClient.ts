@@ -26,6 +26,14 @@ export class SASViyaApiClient {
   private csrfToken: { headerName: string; value: string } | null = null;
   private rootFolder: Folder | null = null;
 
+  public async getAppLocMap() {
+    if (this.rootFolderMap.size) {
+      return this.rootFolderMap;
+    }
+    await this.populateRootFolderMap();
+    return this.rootFolderMap;
+  }
+
   /**
    * Returns all available compute contexts on this server.
    * @param accessToken - an access token for an authorized user.
@@ -248,9 +256,14 @@ export class SASViyaApiClient {
    * Creates a folder in the specified location.
    * @param folderName - the name of the new folder.
    */
-  public async createFolder(folderName: string, parentFolderPath?: string, parentFolderUri?: string, accessToken?: string) {
+  public async createFolder(
+    folderName: string,
+    parentFolderPath?: string,
+    parentFolderUri?: string,
+    accessToken?: string
+  ) {
     if (!parentFolderPath && !parentFolderUri) {
-      throw new Error('Parent folder path or uri is required');
+      throw new Error("Parent folder path or uri is required");
     }
 
     if (!parentFolderUri) {
