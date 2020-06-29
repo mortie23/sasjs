@@ -399,9 +399,9 @@ export default class SASjs {
     const program = this.sasjsConfig.appLoc
       ? this.sasjsConfig.appLoc.replace(/\/?$/, "/") + sasJob.replace(/^\//, "")
       : sasJob;
-    const jobUri = await this.getJobUri(sasJob);
+    const jobUri = this.sasjsConfig.serverType === 'SASVIYA' ? await this.getJobUri(sasJob) : '';
     const apiUrl = `${this.sasjsConfig.serverUrl}${this.jobsPath}/?${
-      jobUri.length > 0 ? "_job=" + jobUri : "_program=" + program
+      jobUri.length > 0 ? "__program=" + program + "&_job=" + jobUri : "_program=" + program
     }`;
 
     const inputParams = params ? params : {};
@@ -409,10 +409,6 @@ export default class SASjs {
       ...inputParams,
       ...this.getRequestParams(),
     };
-
-    if (jobUri.length > 0) {
-      requestParams["__program"] = program;
-    }
 
     const self = this;
 
