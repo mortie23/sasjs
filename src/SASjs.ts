@@ -13,6 +13,7 @@ import {
   parseSourceCode,
   parseGeneratedCode,
   needsRetry,
+  asyncForEach,
 } from "./utils";
 import {
   SASjsConfig,
@@ -118,22 +119,48 @@ export default class SASjs {
     );
   }
 
-  public async createFolder(folderName: string, accessToken?: string) {
+  public async createFolder(
+    folderName: string,
+    parentFolderPath: string,
+    parentFolderUri?: string,
+    accessToken?: string,
+    sasApiClient?: SASViyaApiClient
+  ) {
     if (this.sasjsConfig.serverType !== ServerType.SASViya) {
       throw new Error("This operation is only supported on SAS Viya servers.");
     }
-    return await this.sasViyaApiClient!.createFolder(folderName, accessToken);
+    if (sasApiClient)
+      return await sasApiClient.createFolder(
+        folderName,
+        parentFolderPath,
+        parentFolderUri,
+        accessToken
+      );
+    return await this.sasViyaApiClient!.createFolder(
+      folderName,
+      parentFolderPath,
+      parentFolderUri,
+      accessToken
+    );
   }
 
   public async createJobDefinition(
     folderName: string,
     jobName: string,
     code: string,
-    accessToken?: string
+    accessToken?: string,
+    sasApiClient?: SASViyaApiClient
   ) {
     if (this.sasjsConfig.serverType !== ServerType.SASViya) {
       throw new Error("This operation is only supported on SAS Viya servers.");
     }
+    if (sasApiClient)
+      return await sasApiClient!.createJobDefinition(
+        folderName,
+        jobName,
+        code,
+        accessToken
+      );
     return await this.sasViyaApiClient!.createJobDefinition(
       folderName,
       jobName,
@@ -399,9 +426,14 @@ export default class SASjs {
     const program = this.sasjsConfig.appLoc
       ? this.sasjsConfig.appLoc.replace(/\/?$/, "/") + sasJob.replace(/^\//, "")
       : sasJob;
-    const jobUri = this.sasjsConfig.serverType === 'SASVIYA' ? await this.getJobUri(sasJob) : '';
+    const jobUri =
+      this.sasjsConfig.serverType === "SASVIYA"
+        ? await this.getJobUri(sasJob)
+        : "";
     const apiUrl = `${this.sasjsConfig.serverUrl}${this.jobsPath}/?${
-      jobUri.length > 0 ? "__program=" + program + "&_job=" + jobUri : "_program=" + program
+      jobUri.length > 0
+        ? "__program=" + program + "&_job=" + jobUri
+        : "_program=" + program
     }`;
 
     const inputParams = params ? params : {};
@@ -590,6 +622,53 @@ export default class SASjs {
 
     return sasjsWaitingRequest.requestPromise.promise;
     // }
+  }
+
+  /**
+   * Creates the folders and services in the provided JSON on the given server.
+   * @param serviceJson - the JSON specifying the folders and services to be created.
+   * @param appLoc - the base folder in which to create the new folders and services.
+   * @param serverUrl - the server on which to deploy the folders and services.
+   * @param accessToken - an optional access token to be passed in when
+   * using this function from the command line.
+   */
+  public async deployServicePack(
+    serviceJson: any,
+    appLoc: string,
+    serverUrl: string,
+    accessToken?: string
+  ) {
+    if (this.sasjsConfig.serverType !== ServerType.SASViya) {
+      throw new Error("This operation is only supported on SAS Viya servers.");
+    }
+
+    let sasApiClient: any = null;
+    if (serverUrl || appLoc) {
+      if (this.sasjsConfig.serverType === ServerType.SASViya) {
+        sasApiClient = new SASViyaApiClient(serverUrl, appLoc);
+      } else if (this.sasjsConfig.serverType === ServerType.SAS9) {
+        sasApiClient = new SAS9ApiClient(serverUrl);
+      }
+    } else {
+      let sasClientConfig: any = null;
+      if (this.sasjsConfig.serverType === ServerType.SASViya) {
+        sasClientConfig = this.sasViyaApiClient!.getConfig();
+      } else if (this.sasjsConfig.serverType === ServerType.SAS9) {
+        sasClientConfig = this.sas9ApiClient!.getConfig();
+      }
+      serverUrl = sasClientConfig.serverUrl;
+      appLoc = sasClientConfig.rootFolderName;
+    }
+    const members =
+      serviceJson.members[0].name == "services"
+        ? serviceJson.members[0].members
+        : serviceJson.members;
+    await this.createFoldersAndServices(
+      appLoc,
+      members,
+      accessToken,
+      sasApiClient
+    );
   }
 
   private async resendWaitingRequests() {
@@ -836,13 +915,21 @@ export default class SASjs {
         : "/SASLogon/logout.do?";
 
     if (this.sasjsConfig.serverType === ServerType.SASViya) {
-      this.sasViyaApiClient = new SASViyaApiClient(
-        this.sasjsConfig.serverUrl,
-        this.sasjsConfig.appLoc
-      );
+      if (this.sasViyaApiClient)
+        this.sasViyaApiClient!.setConfig(
+          this.sasjsConfig.serverUrl,
+          this.sasjsConfig.appLoc
+        );
+      else
+        this.sasViyaApiClient = new SASViyaApiClient(
+          this.sasjsConfig.serverUrl,
+          this.sasjsConfig.appLoc
+        );
     }
     if (this.sasjsConfig.serverType === ServerType.SAS9) {
-      this.sas9ApiClient = new SAS9ApiClient(this.sasjsConfig.serverUrl);
+      if (this.sas9ApiClient)
+        this.sas9ApiClient!.setConfig(this.sasjsConfig.serverUrl);
+      else this.sas9ApiClient = new SAS9ApiClient(this.sasjsConfig.serverUrl);
     }
   }
 
@@ -882,5 +969,44 @@ export default class SASjs {
       }
     }
     return Object.keys(formInputs).length ? formInputs : null;
+  }
+
+  private async createFoldersAndServices(
+    parentFolder: string,
+    membersJson: any[],
+    accessToken?: string,
+    sasApiClient?: SASViyaApiClient
+  ) {
+    await asyncForEach(membersJson, async (member: any) => {
+      switch (member.type) {
+        case "folder":
+          await this.createFolder(
+            member.name,
+            parentFolder,
+            undefined,
+            accessToken,
+            sasApiClient
+          );
+          break;
+        case "service":
+          await this.createJobDefinition(
+            `${parentFolder.split("/").pop()}`,
+            member.name,
+            member.code,
+            accessToken,
+            sasApiClient
+          );
+          break;
+        default:
+          throw new Error(`Unidenitied member present in Json: ${member.name}`);
+      }
+      if (member.type === "folder" && member.members && member.members.length)
+        await this.createFoldersAndServices(
+          `${parentFolder}/${member.name}`,
+          member.members,
+          accessToken,
+          sasApiClient
+        );
+    });
   }
 }
