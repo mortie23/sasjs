@@ -275,10 +275,13 @@ export class SASViyaApiClient {
   }
 
   /**
-   * Creates a folder in the specified location.  Either parentFolderPath or parentFolderUri must be provided.
+   * Creates a folder in the specified location.  Either parentFolderPath or 
+   *   parentFolderUri must be provided.  
    * @param folderName - the name of the new folder.
-   * @param parentFolderPath - the full path to the new folder
-   * @param parentFolderUri - the URI (eg /folders/folders/UUID) of the parent folder.
+   * @param parentFolderPath - the full path to the parent folder.  If not 
+   *  provided, the parentFolderUri must be provided.
+   * @param parentFolderUri - the URI (eg /folders/folders/UUID) of the parent 
+   *  folder.  If not provided, the parentFolderPath must be provided.
    */
   public async createFolder(
     folderName: string,
