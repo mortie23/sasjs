@@ -303,13 +303,13 @@
 					<a name="deployservicepack" class="tsd-anchor"></a>
 					<h3>deploy<wbr>Service<wbr>Pack</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">deploy<wbr>Service<wbr>Pack<span class="tsd-signature-symbol">(</span>serviceJson<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, appLoc<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, serverUrl<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, accessToken<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">deploy<wbr>Service<wbr>Pack<span class="tsd-signature-symbol">(</span>serviceJson<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, appLoc<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, serverUrl<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, accessToken<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:636</li>
+									<li>Defined in SASjs.ts:638</li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography tsd-comment-shorttext">
@@ -326,15 +326,17 @@
 									</div>
 								</li>
 								<li>
-									<h5>appLoc: <span class="tsd-signature-type">string</span></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> appLoc: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
 									<div class="tsd-comment tsd-typography tsd-comment-text">
-										<p>the base folder in which to create the new folders and services.</p>
+										<p>the base folder in which to create the new folders and
+										services.  If not provided, is taken from SASjsConfig.</p>
 									</div>
 								</li>
 								<li>
-									<h5>serverUrl: <span class="tsd-signature-type">string</span></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> serverUrl: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
 									<div class="tsd-comment tsd-typography tsd-comment-text">
-										<p>the server on which to deploy the folders and services.</p>
+										<p>the server on which to deploy the folders and services.
+										If not provided, is taken from SASjsConfig.</p>
 									</div>
 								</li>
 								<li>
@@ -548,7 +550,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in SASjs.ts:887</li>
+									<li>Defined in SASjs.ts:889</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../interfaces/sasjsrequest.sasjsrequest-1.html" class="tsd-signature-type">SASjsRequest</a><span class="tsd-signature-symbol">[]</span></h4>
