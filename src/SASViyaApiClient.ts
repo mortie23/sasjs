@@ -3,7 +3,6 @@ import {
   parseAndSubmitAuthorizeForm,
   convertToCSV,
   makeRequest,
-  parseSasViyaLog,
 } from "./utils";
 import * as NodeFormData from "form-data";
 import * as path from "path";
@@ -26,12 +25,35 @@ export class SASViyaApiClient {
   private csrfToken: { headerName: string; value: string } | null = null;
   private rootFolder: Folder | null = null;
 
+  /**
+   * Returns a map containing the directory structure in the currently set root folder.
+   */
   public async getAppLocMap() {
     if (this.rootFolderMap.size) {
       return this.rootFolderMap;
     }
     await this.populateRootFolderMap();
     return this.rootFolderMap;
+  }
+
+  /**
+   * returns an object containing the Server URL and root folder name
+   */
+  public getConfig() {
+    return {
+      serverUrl: this.serverUrl,
+      rootFolderName: this.rootFolderName,
+    };
+  }
+
+  /**
+   * Updates server URL or root folder name when not null
+   * @param serverUrl - the URL of the server.
+   * @param rootFolderName - the name for rootFolderName.
+   */
+  public setConfig(serverUrl: string, rootFolderName: string) {
+    if (serverUrl) this.serverUrl = serverUrl;
+    if (rootFolderName) this.rootFolderName = rootFolderName;
   }
 
   /**
