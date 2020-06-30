@@ -625,7 +625,8 @@ export default class SASjs {
   }
 
   /**
-   * Creates the folders and services in the provided JSON on the given server.
+   * Creates the folders and services in the provided JSON on the given location
+   * (appLoc) on the given server (serverUrl).
    * @param serviceJson - the JSON specifying the folders and services to be created.
    * @param appLoc - the base folder in which to create the new folders and services.
    * @param serverUrl - the server on which to deploy the folders and services.
