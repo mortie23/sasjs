@@ -275,8 +275,10 @@ export class SASViyaApiClient {
   }
 
   /**
-   * Creates a folder in the specified location.
+   * Creates a folder in the specified location.  Either parentFolderPath or parentFolderUri must be provided.
    * @param folderName - the name of the new folder.
+   * @param parentFolderPath - the full path to the new folder
+   * @param parentFolderUri - the URI (eg /folders/folders/UUID) of the parent folder.
    */
   public async createFolder(
     folderName: string,
@@ -321,6 +323,9 @@ export class SASViyaApiClient {
       `${this.serverUrl}/folders/folders?parentFolderUri=${parentFolderUri}`,
       createFolderRequest
     );
+
+    // update rootFolderMap with newly created folder.
+    await this.populateRootFolderMap(accessToken);
     return createFolderResponse;
   }
 
@@ -340,7 +345,6 @@ export class SASViyaApiClient {
       folderName,
       accessToken
     );
-    console.log(parentFolder);
     if (!parentFolder) {
       throw new Error(
         `The folder ${folderName} does not exist or could not be created.`
@@ -351,12 +355,21 @@ export class SASViyaApiClient {
       method: "POST",
       headers: {
         "Content-Type": "application/vnd.sas.job.definition+json",
+        Accept: "application/vnd.sas.job.definition+json",
       },
       body: JSON.stringify({
         name: jobName,
+        type: "Compute",
         code,
       }),
     };
+
+    if (accessToken) {
+      createJobDefinitionRequest!.headers = {
+        ...createJobDefinitionRequest.headers,
+        Authorization: `Bearer ${accessToken}`,
+      };
+    }
 
     return await this.request<Job>(
       `${this.serverUrl}/jobDefinitions/definitions?parentFolderUri=${parentFolder.uri}`,

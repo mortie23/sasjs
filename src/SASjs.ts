@@ -121,6 +121,8 @@ export default class SASjs {
 
   public async createFolder(
     folderName: string,
+    parentFolderPath: string,
+    parentFolderUri?: string,
     accessToken?: string,
     sasApiClient?: SASViyaApiClient
   ) {
@@ -128,8 +130,18 @@ export default class SASjs {
       throw new Error("This operation is only supported on SAS Viya servers.");
     }
     if (sasApiClient)
-      return await sasApiClient!.createFolder(folderName, accessToken);
-    return await this.sasViyaApiClient!.createFolder(folderName, accessToken);
+      return await sasApiClient.createFolder(
+        folderName,
+        parentFolderPath,
+        parentFolderUri,
+        accessToken
+      );
+    return await this.sasViyaApiClient!.createFolder(
+      folderName,
+      parentFolderPath,
+      parentFolderUri,
+      accessToken
+    );
   }
 
   public async createJobDefinition(
@@ -637,10 +649,23 @@ export default class SASjs {
       } else if (this.sasjsConfig.serverType === ServerType.SAS9) {
         sasApiClient = new SAS9ApiClient(serverUrl);
       }
+    } else {
+      let sasClientConfig: any = null;
+      if (this.sasjsConfig.serverType === ServerType.SASViya) {
+        sasClientConfig = this.sasViyaApiClient!.getConfig();
+      } else if (this.sasjsConfig.serverType === ServerType.SAS9) {
+        sasClientConfig = this.sas9ApiClient!.getConfig();
+      }
+      serverUrl = sasClientConfig.serverUrl;
+      appLoc = sasClientConfig.rootFolderName;
     }
+    const members =
+      serviceJson.members[0].name == "services"
+        ? serviceJson.members[0].members
+        : serviceJson.members;
     await this.createFoldersAndServices(
-      "",
-      serviceJson.members,
+      appLoc,
+      members,
       accessToken,
       sasApiClient
     );
@@ -955,11 +980,17 @@ export default class SASjs {
     await asyncForEach(membersJson, async (member: any) => {
       switch (member.type) {
         case "folder":
-          await this.createFolder(member.name, accessToken, sasApiClient);
+          await this.createFolder(
+            member.name,
+            parentFolder,
+            undefined,
+            accessToken,
+            sasApiClient
+          );
           break;
         case "service":
           await this.createJobDefinition(
-            parentFolder,
+            `${parentFolder.split("/").pop()}`,
             member.name,
             member.code,
             accessToken,
@@ -971,7 +1002,7 @@ export default class SASjs {
       }
       if (member.type === "folder" && member.members && member.members.length)
         await this.createFoldersAndServices(
-          member.name,
+          `${parentFolder}/${member.name}`,
           member.members,
           accessToken,
           sasApiClient
