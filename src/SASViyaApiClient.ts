@@ -294,7 +294,7 @@ export class SASViyaApiClient {
     }
 
     if (!parentFolderUri && parentFolderPath) {
-      parentFolderUri = await this.getFolderUri(parentFolderPath);
+      parentFolderUri = await this.getFolderUri(parentFolderPath, accessToken);
       if (!parentFolderUri){
         console.log(`Parent folder is not present: ${parentFolderPath}`);
 
@@ -351,9 +351,7 @@ export class SASViyaApiClient {
     }
 
     if (!parentFolderUri && parentFolderPath) {
-      let folderName = parentFolderPath.split('/').pop() || '';
-      let folder = await this.createFolder(folderName, parentFolderPath);
-      parentFolderUri = folder.uri;
+      parentFolderUri = await this.getFolderUri(parentFolderPath, accessToken);
     }
 
     const createJobDefinitionRequest: RequestInit = {
