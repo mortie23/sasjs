@@ -166,7 +166,7 @@ export default class SASjs {
     return await this.sasViyaApiClient!.createJobDefinition(
       jobName,
       code,
-      parentFolderUri,
+      parentFolderPath,
       parentFolderUri,
       accessToken
     );
