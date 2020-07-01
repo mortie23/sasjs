@@ -32,7 +32,8 @@ export class SASViyaApiClient {
     if (this.rootFolderMap.size) {
       return this.rootFolderMap;
     }
-    await this.populateRootFolderMap();
+    
+    this.populateRootFolderMap();
     return this.rootFolderMap;
   }
 
