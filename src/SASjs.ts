@@ -145,9 +145,10 @@ export default class SASjs {
   }
 
   public async createJobDefinition(
-    folderName: string,
     jobName: string,
     code: string,
+    parentFolderPath?: string,
+    parentFolderUri?: string,
     accessToken?: string,
     sasApiClient?: SASViyaApiClient
   ) {
@@ -156,15 +157,17 @@ export default class SASjs {
     }
     if (sasApiClient)
       return await sasApiClient!.createJobDefinition(
-        folderName,
         jobName,
         code,
+        parentFolderPath,
+        parentFolderUri,
         accessToken
       );
     return await this.sasViyaApiClient!.createJobDefinition(
-      folderName,
       jobName,
       code,
+      parentFolderUri,
+      parentFolderUri,
       accessToken
     );
   }
@@ -993,9 +996,10 @@ export default class SASjs {
           break;
         case "service":
           await this.createJobDefinition(
-            `${parentFolder.split("/").pop()}`,
             member.name,
             member.code,
+            parentFolder,
+            undefined,
             accessToken,
             sasApiClient
           );
