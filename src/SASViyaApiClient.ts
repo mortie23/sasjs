@@ -288,25 +288,13 @@ export class SASViyaApiClient {
     parentFolderPath?: string,
     parentFolderUri?: string,
     accessToken?: string
-  ) {
+  ): Promise<Folder> {
     if (!parentFolderPath && !parentFolderUri) {
       throw new Error("Parent folder path or uri is required");
     }
 
-    if (!parentFolderUri) {
-      const url = "/folders/folders/@item?path=" + parentFolderPath;
-      const requestInfo: any = {
-        method: "GET",
-      };
-      if (accessToken) {
-        requestInfo.headers = { Authorization: `Bearer ${accessToken}` };
-      }
-      const folder = await this.request<Folder>(
-        `${this.serverUrl}${url}`,
-        requestInfo
-      );
-
-      parentFolderUri = `/folders/folders/${folder.id}`;
+    if (!parentFolderUri && parentFolderPath) {
+      parentFolderUri = await this.getFolderUri(parentFolderPath);
     }
 
     const createFolderRequest: RequestInit = {
@@ -339,19 +327,20 @@ export class SASViyaApiClient {
    * @param code - the SAS code for the new job.
    */
   public async createJobDefinition(
-    folderName: string,
     jobName: string,
     code: string,
+    parentFolderPath?: string,
+    parentFolderUri?: string,
     accessToken?: string
   ) {
-    const parentFolder = await this.fetchOrCreateFolder(
-      folderName,
-      accessToken
-    );
-    if (!parentFolder) {
-      throw new Error(
-        `The folder ${folderName} does not exist or could not be created.`
-      );
+    if (!parentFolderPath && !parentFolderUri) {
+      throw new Error('Either parentFolderPath or parentFolderUri must be provided');
+    }
+
+    if (!parentFolderUri && parentFolderPath) {
+      let folderName = parentFolderPath.split('/').pop() || '';
+      let folder = await this.createFolder(folderName, parentFolderPath);
+      parentFolderUri = folder.uri;
     }
 
     const createJobDefinitionRequest: RequestInit = {
@@ -375,7 +364,7 @@ export class SASViyaApiClient {
     }
 
     return await this.request<Job>(
-      `${this.serverUrl}/jobDefinitions/definitions?parentFolderUri=${parentFolder.uri}`,
+      `${this.serverUrl}/jobDefinitions/definitions?parentFolderUri=${parentFolderUri}`,
       createJobDefinitionRequest
     );
   }
@@ -799,25 +788,20 @@ export class SASViyaApiClient {
     return uploadedFiles;
   }
 
-  private async fetchOrCreateFolder(folderName: string, accessToken?: string) {
-    if (!this.rootFolder) {
-      await this.populateRootFolder(accessToken);
-    }
+  private async getFolderUri(folderPath: string, accessToken?: string) {
+    const url = "/folders/folders/@item?path=" + folderPath;
+      const requestInfo: any = {
+        method: "GET",
+      };
+      if (accessToken) {
+        requestInfo.headers = { Authorization: `Bearer ${accessToken}` };
+      }
+      const folder = await this.request<Folder>(
+        `${this.serverUrl}${url}`,
+        requestInfo
+      );
 
-    if (!this.rootFolderMap.size) {
-      await this.populateRootFolderMap(accessToken);
-    }
-
-    if (!this.rootFolder) {
-      throw new Error("Root folder was not found");
-    }
-
-    const folderNameParts = folderName.split("/");
-
-    const currentFolder = this.rootFolderMap
-      .get("")
-      ?.find((x: any) => x.name === folderName);
-    return currentFolder;
+      return `/folders/folders/${folder.id}`;
   }
 
   private async request<T>(
