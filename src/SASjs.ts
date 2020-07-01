@@ -395,7 +395,6 @@ export default class SASjs {
       data,
       params,
     };
-    let logInRequired = false;
 
     // if (
     //   this.sasjsConfig.serverType === ServerType.SASViya &&
@@ -565,7 +564,6 @@ export default class SASjs {
 
               if (isLogInRequired(responseText)) {
                 if (loginRequiredCallback) loginRequiredCallback(true);
-                logInRequired = true;
                 sasjsWaitingRequest.requestPromise.resolve = resolve;
                 sasjsWaitingRequest.requestPromise.reject = reject;
                 this.sasjsWaitingRequests.push(sasjsWaitingRequest);
@@ -752,7 +750,8 @@ export default class SASjs {
   }
 
   private async getJobUri(sasJob: string) {
-    const jobMap: any = await this.sasViyaApiClient!.getAppLocMap();
+    if (!this.sasViyaApiClient) return '';
+    const jobMap: any = await this.sasViyaApiClient.getAppLocMap();
     let uri = "";
 
     if (jobMap.size) {
