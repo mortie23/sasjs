@@ -294,7 +294,20 @@ export class SASViyaApiClient {
     }
 
     if (!parentFolderUri && parentFolderPath) {
-      parentFolderUri = await this.getFolderUri(parentFolderPath);
+      parentFolderUri = await this.getFolderUri(parentFolderPath, accessToken);
+      if (!parentFolderUri){
+        console.log(`Parent folder is not present: ${parentFolderPath}`);
+
+        const newParentFolderPath = parentFolderPath.substring(0, parentFolderPath.lastIndexOf("/"));
+        const newFolderName = `${parentFolderPath.split("/").pop()}`;
+        if (newParentFolderPath === ""){
+          throw new Error("Root Folder should have been present on server");
+        }
+        console.log(`Creating Parent Folder:\n${newFolderName} in ${newParentFolderPath}`)
+        const parentFolder = await this.createFolder(newFolderName, newParentFolderPath, undefined, accessToken)
+        console.log(`Parent Folder "${newFolderName}" successfully created.`)
+        parentFolderUri = `/folders/folders/${parentFolder.id}`;
+      }
     }
 
     const createFolderRequest: RequestInit = {
@@ -652,6 +665,9 @@ export class SASViyaApiClient {
       `${this.serverUrl}${url}`,
       requestInfo
     );
+    if (!folder){
+      throw new Error("Cannot populate RootFolderMap unless rootFolder exists");
+    }
     const members = await this.request<{ items: any[] }>(
       `${this.serverUrl}/folders/folders/${folder.id}/members`,
       requestInfo
@@ -800,7 +816,8 @@ export class SASViyaApiClient {
         `${this.serverUrl}${url}`,
         requestInfo
       );
-
+      if (!folder)
+        return undefined;
       return `/folders/folders/${folder.id}`;
   }
 
