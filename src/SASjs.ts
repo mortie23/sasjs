@@ -647,6 +647,12 @@ export default class SASjs {
 
     let sasApiClient: any = null;
     if (serverUrl || appLoc) {
+      if (!serverUrl) { 
+        serverUrl = this.sasjsConfig.serverUrl;
+      }
+      if (!appLoc) {
+        appLoc = this.sasjsConfig.appLoc;
+      }
       if (this.sasjsConfig.serverType === ServerType.SASViya) {
         sasApiClient = new SASViyaApiClient(serverUrl, appLoc);
       } else if (this.sasjsConfig.serverType === ServerType.SAS9) {
@@ -660,10 +666,10 @@ export default class SASjs {
         sasClientConfig = this.sas9ApiClient!.getConfig();
       }
       serverUrl = sasClientConfig.serverUrl;
-      appLoc = sasClientConfig.rootFolderName;
+      appLoc = sasClientConfig.rootFolderName as string;
     }
     const members =
-      serviceJson.members[0].name == "services"
+      serviceJson.members[0].name === "services"
         ? serviceJson.members[0].members
         : serviceJson.members;
     await this.createFoldersAndServices(
