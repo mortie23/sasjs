@@ -1,6 +1,5 @@
 import SASjs from "sasjs";
 import { TestSuite } from "../types";
-import { assert } from "../utils/Assert";
 
 const data: any = {
   table1: [
@@ -39,15 +38,15 @@ export const tests = (
         return adapter.request("common/sendArr", data);
       },
       assertion: (res: any) => {
-        assert(!!res.table1[0][0]);
-        assert(res.table1[0][0] === data.table1[0].tab);
-        assert(res.table1[0][1] === data.table1[0].lf);
-        assert(res.table1[0][2] === data.table1[0].cr);
-        assert(res.table1[0][3] === data.table1[0].semicolon);
-        assert(res.table1[0][4] === "\n");
-        assert(res.table1[0][5] === data.table1[0].euro);
-        assert(res.table1[0][6] === data.table1[0].banghash);
-        return true;
+        return (
+          res.table1[0][0] === data.table1[0].tab &&
+          res.table1[0][1] === data.table1[0].lf &&
+          res.table1[0][2] === data.table1[0].cr &&
+          // res.table1[0][3] === data.table1[0].semicolon
+          res.table1[0][4] === "\n" &&
+          res.table1[0][5] === data.table1[0].euro &&
+          res.table1[0][6] === data.table1[0].banghash
+        );
       },
     },
   ],
