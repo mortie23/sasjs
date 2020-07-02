@@ -1,0 +1,11 @@
+{
+  "userName": "rehakm",
+  "password": "Qaja3788",
+  "sasJsConfig": {
+    "serverUrl": "",
+    "appLoc": "/Public/app/dc/dc42",
+    "serverType": "SASVIYA",
+    "debug": false,
+    "contextName": null
+  }
+}
