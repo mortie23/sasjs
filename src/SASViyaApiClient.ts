@@ -335,8 +335,10 @@ export class SASViyaApiClient {
   }
 
   /**
-   * Creates a file in the specified folder.
-   * @param folderName - the location of the new file.
+   * Creates a Job in the specified folder (or folder uri).
+   * @param parentFolderPath - the location of the new job.
+   * @param parentFolderUri - the URI location of the new job. The function is a
+   * little faster if the folder URI is supplied instead of the path.
    * @param jobName - the name of the new job to be created.
    * @param code - the SAS code for the new job.
    */
@@ -363,6 +365,13 @@ export class SASViyaApiClient {
       },
       body: JSON.stringify({
         name: jobName,
+        parameters:[
+          {
+            "name":"_addjesbeginendmacros",
+            "type":"CHARACTER",
+            "defaultValue":"false"
+          }
+        ],
         type: "Compute",
         code,
       }),
