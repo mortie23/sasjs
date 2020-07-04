@@ -1,20 +1,6 @@
 import SASjs, { ServerType, SASjsConfig } from "sasjs";
 import { TestSuite } from "../types";
 
-const data: any = {
-  table1: [
-    {
-      tab: "\t",
-      lf: "\n",
-      cr: "\r",
-      semicolon: ";semi",
-      crlf: "\r\n",
-      euro: "€euro",
-      banghash: "!#banghash",
-    },
-  ],
-};
-
 const defaultConfig: SASjsConfig = {
   serverUrl: window.location.origin,
   pathSAS9: "/SASStoredProcess/do",

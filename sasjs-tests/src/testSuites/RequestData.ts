@@ -1,4 +1,4 @@
-import SASjs, { ServerType, SASjsConfig } from "sasjs";
+import SASjs from "sasjs";
 import { TestSuite } from "../types";
 
 const specialCharData: any = {
@@ -8,6 +8,9 @@ const specialCharData: any = {
       lf: "\n",
       cr: "\r",
       semicolon: ";semi",
+      percent: "%",
+      singleQuote: "'",
+      doubleQuote: '"',
       crlf: "\r\n",
       euro: "€euro",
       banghash: "!#banghash",
@@ -17,6 +20,9 @@ const specialCharData: any = {
 
 const stringData: any = { table1: [{ col1: "first col value" }] };
 const numericData: any = { table1: [{ col1: 3.14159265 }] };
+const multiColumnData: any = {
+  table1: [{ col1: 42, col2: 1.618, col3: "x", col4: "x" }],
+};
 
 const getLongStringData = (length = 32764) => {
   let x = "X";
@@ -24,6 +30,16 @@ const getLongStringData = (length = 32764) => {
     x = x + "X";
   }
   const data: any = { table1: [{ col1: x }] };
+  return data;
+};
+
+const getLargeObjectData = () => {
+  const data = { table1: [{ big: "data" }] };
+
+  for (let i = 1; i < 10000; i++) {
+    data.table1.push(data.table1[0]);
+  }
+
   return data;
 };
 
@@ -87,9 +103,27 @@ export const sendArrTests = (adapter: SASjs): TestSuite => ({
           res.table1[0][1] === specialCharData.table1[0].lf &&
           res.table1[0][2] === specialCharData.table1[0].cr &&
           res.table1[0][3] === specialCharData.table1[0].semicolon &&
-          res.table1[0][4] === "\n" &&
-          res.table1[0][5] === specialCharData.table1[0].euro &&
-          res.table1[0][6] === specialCharData.table1[0].banghash
+          res.table1[0][4] === specialCharData.table1[0].percent &&
+          res.table1[0][5] === specialCharData.table1[0].singleQuote &&
+          res.table1[0][6] === specialCharData.table1[0].doubleQuote &&
+          res.table1[0][7] === "\n" &&
+          res.table1[0][8] === specialCharData.table1[0].euro &&
+          res.table1[0][9] === specialCharData.table1[0].banghash
+        );
+      },
+    },
+    {
+      title: "Multiple columns",
+      description: "Should handle data with multiple columns",
+      test: () => {
+        return adapter.request("common/sendArr", multiColumnData);
+      },
+      assertion: (res: any) => {
+        return (
+          res.table1[0][0] === multiColumnData.table1[0].col1 &&
+          res.table1[0][1] === multiColumnData.table1[0].col2 &&
+          res.table1[0][2] === multiColumnData.table1[0].col3 &&
+          res.table1[0][3] === multiColumnData.table1[0].col4
         );
       },
     },
@@ -153,6 +187,33 @@ export const sendObjTests = (adapter: SASjs): TestSuite => ({
       },
       assertion: (res: any) => {
         return res.table1[0].COL1 === numericData.table1[0].col1;
+      },
+    },
+
+    {
+      title: "Large data volume",
+      description: "Should send an object with a large amount of data",
+      test: () => {
+        return adapter.request("common/sendObj", getLargeObjectData());
+      },
+      assertion: (res: any) => {
+        const data = getLargeObjectData();
+        return res.table1[9000].BIG === data.table1[9000].big;
+      },
+    },
+    {
+      title: "Multiple columns",
+      description: "Should handle data with multiple columns",
+      test: () => {
+        return adapter.request("common/sendObj", multiColumnData);
+      },
+      assertion: (res: any) => {
+        return (
+          res.table1[0].COL1 === multiColumnData.table1[0].col1 &&
+          res.table1[0].COL2 === multiColumnData.table1[0].col2 &&
+          res.table1[0].COL3 === multiColumnData.table1[0].col3 &&
+          res.table1[0].COL4 === multiColumnData.table1[0].col4
+        );
       },
     },
   ],
