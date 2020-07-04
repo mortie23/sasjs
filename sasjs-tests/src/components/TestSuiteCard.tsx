@@ -5,7 +5,12 @@ import TestCard from "./TestCard";
 
 interface TestSuiteCardProps {
   name: string;
-  tests: { test: Test; result: boolean; error: Error | null }[];
+  tests: {
+    test: Test;
+    result: boolean;
+    error: Error | null;
+    executionTime: number;
+  }[];
 }
 const TestSuiteCard = (
   props: TestSuiteCardProps
@@ -19,7 +24,7 @@ const TestSuiteCard = (
         {name}
       </div>
       {tests.map((completedTest, index) => {
-        const { test, result, error } = completedTest;
+        const { test, result, error, executionTime } = completedTest;
         const { title, description } = test;
         return (
           <TestCard
@@ -28,6 +33,7 @@ const TestSuiteCard = (
             description={description}
             status={result === true ? "passed" : "failed"}
             error={error}
+            executionTime={executionTime}
           />
         );
       })}

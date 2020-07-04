@@ -629,7 +629,7 @@ export default class SASjs {
    * Creates the folders and services in the provided JSON on the given location
    * (appLoc) on the given server (serverUrl).
    * @param serviceJson - the JSON specifying the folders and services to be created.
-   * @param appLoc - the base folder in which to create the new folders and 
+   * @param appLoc - the base folder in which to create the new folders and
    * services.  If not provided, is taken from SASjsConfig.
    * @param serverUrl - the server on which to deploy the folders and services.
    * If not provided, is taken from SASjsConfig.
@@ -648,7 +648,7 @@ export default class SASjs {
 
     let sasApiClient: any = null;
     if (serverUrl || appLoc) {
-      if (!serverUrl) { 
+      if (!serverUrl) {
         serverUrl = this.sasjsConfig.serverUrl;
       }
       if (!appLoc) {
@@ -750,7 +750,7 @@ export default class SASjs {
   }
 
   private async getJobUri(sasJob: string) {
-    if (!this.sasViyaApiClient) return '';
+    if (!this.sasViyaApiClient) return "";
     const jobMap: any = await this.sasViyaApiClient.getAppLocMap();
     let uri = "";
 

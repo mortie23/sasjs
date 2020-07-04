@@ -11,14 +11,24 @@ interface TestSuiteProps {
   afterAll?: (...args: any) => Promise<any>;
   onCompleted: (
     name: string,
-    completedTests: { test: Test; result: boolean; error: Error | null }[]
+    completedTests: {
+      test: Test;
+      result: boolean;
+      error: Error | null;
+      executionTime: number;
+    }[]
   ) => void;
 }
 const TestSuite = (props: TestSuiteProps): ReactElement<TestSuiteProps> => {
   const { name, tests, beforeAll, afterAll, onCompleted } = props;
   const [context, setContext] = useState<any>(null);
   const [completedTests, setCompletedTests] = useState<
-    { test: Test; result: boolean; error: Error | null }[]
+    {
+      test: Test;
+      result: boolean;
+      error: Error | null;
+      executionTime: number;
+    }[]
   >([]);
   const [currentTest, setCurrentTest] = useState<Test | null>(
     (null as unknown) as Test
@@ -52,6 +62,7 @@ const TestSuite = (props: TestSuiteProps): ReactElement<TestSuiteProps> => {
                 test: currentTest,
                 result: completedTest.result,
                 error: completedTest.error,
+                executionTime: completedTest.executionTime,
               },
             ];
             setCompletedTests(newCompleteTests);

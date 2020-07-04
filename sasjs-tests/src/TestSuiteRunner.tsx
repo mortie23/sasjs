@@ -2,10 +2,11 @@ import React, { useEffect, useState, ReactElement, useContext } from "react";
 import TestSuiteComponent from "./components/TestSuite";
 import TestSuiteCard from "./components/TestSuiteCard";
 import { TestSuite, Test } from "./types";
-import { tests } from "./testSuites/Tests";
+import { basicTests } from "./testSuites/Basic";
 import "./TestSuiteRunner.scss";
 import SASjs from "sasjs";
 import { AppContext } from "./context/AppContext";
+import { sendArrTests, sendObjTests } from "./testSuites/RequestData";
 
 interface TestSuiteRunnerProps {
   adapter: SASjs;
@@ -20,7 +21,12 @@ const TestSuiteRunner = (
   const [completedTestSuites, setCompletedTestSuites] = useState<
     {
       name: string;
-      completedTests: { test: Test; result: boolean; error: Error | null }[];
+      completedTests: {
+        test: Test;
+        result: boolean;
+        error: Error | null;
+        executionTime: number;
+      }[];
     }[]
   >([]);
   const [currentTestSuite, setCurrentTestSuite] = useState<TestSuite | null>(
@@ -29,7 +35,11 @@ const TestSuiteRunner = (
 
   useEffect(() => {
     if (adapter) {
-      setTestSuites([tests(adapter, config.userName, config.password)]);
+      setTestSuites([
+        basicTests(adapter, config.userName, config.password),
+        sendArrTests(adapter),
+        sendObjTests(adapter),
+      ]);
       setCompletedTestSuites([]);
     }
   }, [adapter]);
@@ -82,6 +92,7 @@ const TestSuiteRunner = (
               test: Test;
               result: boolean;
               error: Error | null;
+              executionTime: number;
             }[]
           ) => {
             const currentIndex = testSuites.indexOf(currentTestSuite);

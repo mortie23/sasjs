@@ -6,14 +6,18 @@ interface TestCardProps {
   description: string;
   status: string;
   error: Error | null;
+  executionTime?: number;
 }
 const TestCard = (props: TestCardProps): ReactElement<TestCardProps> => {
-  const { title, description, status, error } = props;
+  const { title, description, status, error, executionTime } = props;
 
   return (
     <div className="test">
       <code className="title">{title}</code>
       <span className="description">{description}</span>
+      <span className="execution-time">
+        {executionTime ? executionTime.toFixed(2) + "s" : ""}
+      </span>
       {status === "running" && (
         <div>
           <span className="icon running"></span>Running...

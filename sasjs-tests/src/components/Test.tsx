@@ -1,5 +1,6 @@
 import React, { ReactElement, useEffect, useState } from "react";
 import TestCard from "./TestCard";
+import { start } from "repl";
 
 interface TestProps {
   title: string;
@@ -8,7 +9,11 @@ interface TestProps {
   afterTest?: (...args: any) => Promise<any>;
   test: (context: any) => Promise<any>;
   assertion: (...args: any) => boolean;
-  onCompleted: (payload: { result: boolean; error: Error | null }) => void;
+  onCompleted: (payload: {
+    result: boolean;
+    error: Error | null;
+    executionTime: number;
+  }) => void;
   context: any;
 }
 
@@ -34,6 +39,7 @@ const Test = (props: TestProps): ReactElement<TestProps> => {
 
   useEffect(() => {
     if (test && assertion) {
+      const startTime = new Date().valueOf();
       setIsRunning(true);
       setIsPassed(false);
       beforeTestFunction()
@@ -45,13 +51,17 @@ const Test = (props: TestProps): ReactElement<TestProps> => {
         })
         .then((testResult) => {
           afterTestFunction();
-          onCompleted({ result: testResult, error: null });
+          const endTime = new Date().valueOf();
+          const executionTime = (endTime - startTime) / 1000;
+          onCompleted({ result: testResult, error: null, executionTime });
         })
         .catch((e) => {
           setIsRunning(false);
           setIsPassed(false);
           console.error(e);
-          onCompleted({ result: false, error: e });
+          const endTime = new Date().valueOf();
+          const executionTime = (endTime - startTime) / 1000;
+          onCompleted({ result: false, error: e, executionTime });
         });
     }
   }, [test, assertion]);
