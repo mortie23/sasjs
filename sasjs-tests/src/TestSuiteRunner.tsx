@@ -7,6 +7,8 @@ import "./TestSuiteRunner.scss";
 import SASjs from "sasjs";
 import { AppContext } from "./context/AppContext";
 import { sendArrTests, sendObjTests } from "./testSuites/RequestData";
+import { specialCaseTests } from "./testSuites/SpecialCases";
+import { sasjsRequestTests } from "./testSuites/SasjsRequests";
 
 interface TestSuiteRunnerProps {
   adapter: SASjs;
@@ -39,6 +41,8 @@ const TestSuiteRunner = (
         basicTests(adapter, config.userName, config.password),
         sendArrTests(adapter),
         sendObjTests(adapter),
+        specialCaseTests(adapter),
+        sasjsRequestTests(adapter),
       ]);
       setCompletedTestSuites([]);
     }

@@ -1,27 +1,28 @@
 import SASjs from "sasjs";
 import { TestSuite } from "../types";
 
-const specialCharData: any = {
-  table1: [
-    {
-      tab: "\t",
-      lf: "\n",
-      cr: "\r",
-      semicolon: ";semi",
-      percent: "%",
-      singleQuote: "'",
-      doubleQuote: '"',
-      crlf: "\r\n",
-      euro: "€euro",
-      banghash: "!#banghash",
-    },
-  ],
-};
-
 const stringData: any = { table1: [{ col1: "first col value" }] };
 const numericData: any = { table1: [{ col1: 3.14159265 }] };
 const multiColumnData: any = {
   table1: [{ col1: 42, col2: 1.618, col3: "x", col4: "x" }],
+};
+const multipleRowsWithNulls: any = {
+  table1: [
+    { col1: 42, col2: null, col3: "x", col4: "" },
+    { col1: 42, col2: null, col3: "x", col4: "" },
+    { col1: 42, col2: null, col3: "x", col4: "" },
+    { col1: 42, col2: 1.62, col3: "x", col4: "x" },
+    { col1: 42, col2: 1.62, col3: "x", col4: "x" },
+  ],
+};
+const multipleColumnsWithNulls: any = {
+  table1: [
+    { col1: 42, col2: null, col3: "x", col4: null },
+    { col1: 42, col2: null, col3: "x", col4: null },
+    { col1: 42, col2: null, col3: "x", col4: null },
+    { col1: 42, col2: null, col3: "x", col4: "" },
+    { col1: 42, col2: null, col3: "x", col4: "" },
+  ],
 };
 
 const getLongStringData = (length = 32764) => {
@@ -92,27 +93,6 @@ export const sendArrTests = (adapter: SASjs): TestSuite => ({
       },
     },
     {
-      title: "Special characters",
-      description: "Should handle special characters",
-      test: () => {
-        return adapter.request("common/sendArr", specialCharData);
-      },
-      assertion: (res: any) => {
-        return (
-          res.table1[0][0] === specialCharData.table1[0].tab &&
-          res.table1[0][1] === specialCharData.table1[0].lf &&
-          res.table1[0][2] === specialCharData.table1[0].cr &&
-          res.table1[0][3] === specialCharData.table1[0].semicolon &&
-          res.table1[0][4] === specialCharData.table1[0].percent &&
-          res.table1[0][5] === specialCharData.table1[0].singleQuote &&
-          res.table1[0][6] === specialCharData.table1[0].doubleQuote &&
-          res.table1[0][7] === "\n" &&
-          res.table1[0][8] === specialCharData.table1[0].euro &&
-          res.table1[0][9] === specialCharData.table1[0].banghash
-        );
-      },
-    },
-    {
       title: "Multiple columns",
       description: "Should handle data with multiple columns",
       test: () => {
@@ -125,6 +105,60 @@ export const sendArrTests = (adapter: SASjs): TestSuite => ({
           res.table1[0][2] === multiColumnData.table1[0].col3 &&
           res.table1[0][3] === multiColumnData.table1[0].col4
         );
+      },
+    },
+    {
+      title: "Multiple rows with nulls",
+      description: "Should handle data with multiple rows with null values",
+      test: () => {
+        return adapter.request("common/sendArr", multipleRowsWithNulls);
+      },
+      assertion: (res: any) => {
+        let result = true;
+        multipleRowsWithNulls.table1.forEach((_: any, index: number) => {
+          result =
+            result &&
+            res.table1[index][0] === multipleRowsWithNulls.table1[index].col1;
+          result =
+            result &&
+            res.table1[index][1] === multipleRowsWithNulls.table1[index].col2;
+          result =
+            result &&
+            res.table1[index][2] === multipleRowsWithNulls.table1[index].col3;
+          result =
+            result &&
+            res.table1[index][3] === multipleRowsWithNulls.table1[index].col4;
+        });
+        return result;
+      },
+    },
+    {
+      title: "Multiple columns with nulls",
+      description: "Should handle data with multiple columns with null values",
+      test: () => {
+        return adapter.request("common/sendArr", multipleColumnsWithNulls);
+      },
+      assertion: (res: any) => {
+        let result = true;
+        multipleColumnsWithNulls.table1.forEach((_: any, index: number) => {
+          result =
+            result &&
+            res.table1[index][0] ===
+              multipleColumnsWithNulls.table1[index].col1;
+          result =
+            result &&
+            res.table1[index][1] ===
+              multipleColumnsWithNulls.table1[index].col2;
+          result =
+            result &&
+            res.table1[index][2] ===
+              multipleColumnsWithNulls.table1[index].col3;
+          result =
+            result &&
+            res.table1[index][3] ===
+              (multipleColumnsWithNulls.table1[index].col4 || "");
+        });
+        return result;
       },
     },
   ],
@@ -214,6 +248,60 @@ export const sendObjTests = (adapter: SASjs): TestSuite => ({
           res.table1[0].COL3 === multiColumnData.table1[0].col3 &&
           res.table1[0].COL4 === multiColumnData.table1[0].col4
         );
+      },
+    },
+    {
+      title: "Multiple rows with nulls",
+      description: "Should handle data with multiple rows with null values",
+      test: () => {
+        return adapter.request("common/sendObj", multipleRowsWithNulls);
+      },
+      assertion: (res: any) => {
+        let result = true;
+        multipleRowsWithNulls.table1.forEach((_: any, index: number) => {
+          result =
+            result &&
+            res.table1[index].COL1 === multipleRowsWithNulls.table1[index].col1;
+          result =
+            result &&
+            res.table1[index].COL2 === multipleRowsWithNulls.table1[index].col2;
+          result =
+            result &&
+            res.table1[index].COL3 === multipleRowsWithNulls.table1[index].col3;
+          result =
+            result &&
+            res.table1[index].COL4 === multipleRowsWithNulls.table1[index].col4;
+        });
+        return result;
+      },
+    },
+    {
+      title: "Multiple columns with nulls",
+      description: "Should handle data with multiple columns with null values",
+      test: () => {
+        return adapter.request("common/sendObj", multipleColumnsWithNulls);
+      },
+      assertion: (res: any) => {
+        let result = true;
+        multipleColumnsWithNulls.table1.forEach((_: any, index: number) => {
+          result =
+            result &&
+            res.table1[index].COL1 ===
+              multipleColumnsWithNulls.table1[index].col1;
+          result =
+            result &&
+            res.table1[index].COL2 ===
+              multipleColumnsWithNulls.table1[index].col2;
+          result =
+            result &&
+            res.table1[index].COL3 ===
+              multipleColumnsWithNulls.table1[index].col3;
+          result =
+            result &&
+            res.table1[index].COL4 ===
+              (multipleColumnsWithNulls.table1[index].col4 || "");
+        });
+        return result;
       },
     },
   ],
