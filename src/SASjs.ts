@@ -452,7 +452,12 @@ export default class SASjs {
     let errorMsg = "";
 
     if (data) {
-      if (this.sasjsConfig.serverType === ServerType.SAS9) {
+      const stringifiedData = JSON.stringify(data);
+      if (
+        this.sasjsConfig.serverType === ServerType.SAS9 ||
+        stringifiedData.length > 500000 ||
+        stringifiedData.includes(";")
+      ) {
         // file upload approach
         for (const tableName in data) {
           if (isError) {
@@ -472,35 +477,34 @@ export default class SASjs {
             `${name}.csv`
           );
         }
-      } else {
-        // param based approach
-        const sasjsTables = [];
-        let tableCounter = 0;
-        for (const tableName in data) {
-          if (isError) {
-            return;
-          }
-          tableCounter++;
-          sasjsTables.push(tableName);
-          const csv = convertToCSV(data[tableName]);
-          if (csv === "ERROR: LARGE STRING LENGTH") {
-            isError = true;
-            errorMsg =
-              "The max length of a string value in SASjs is 32765 characters.";
-          }
-          // if csv has length more then 16k, send in chunks
-          if (csv.length > 16000) {
-            const csvChunks = splitChunks(csv);
-            // append chunks to form data with same key
-            csvChunks.map((chunk) => {
-              formData.append(`sasjs${tableCounter}data`, chunk);
-            });
-          } else {
-            requestParams[`sasjs${tableCounter}data`] = csv;
-          }
-        }
-        requestParams["sasjs_tables"] = sasjsTables.join(" ");
       }
+      // param based approach
+      const sasjsTables = [];
+      let tableCounter = 0;
+      for (const tableName in data) {
+        if (isError) {
+          return;
+        }
+        tableCounter++;
+        sasjsTables.push(tableName);
+        const csv = convertToCSV(data[tableName]);
+        if (csv === "ERROR: LARGE STRING LENGTH") {
+          isError = true;
+          errorMsg =
+            "The max length of a string value in SASjs is 32765 characters.";
+        }
+        // if csv has length more then 16k, send in chunks
+        if (csv.length > 16000) {
+          const csvChunks = splitChunks(csv);
+          // append chunks to form data with same key
+          csvChunks.map((chunk) => {
+            formData.append(`sasjs${tableCounter}data`, chunk);
+          });
+        } else {
+          requestParams[`sasjs${tableCounter}data`] = csv;
+        }
+      }
+      requestParams["sasjs_tables"] = sasjsTables.join(" ");
     }
 
     for (const key in requestParams) {
@@ -629,7 +633,7 @@ export default class SASjs {
    * Creates the folders and services in the provided JSON on the given location
    * (appLoc) on the given server (serverUrl).
    * @param serviceJson - the JSON specifying the folders and services to be created.
-   * @param appLoc - the base folder in which to create the new folders and 
+   * @param appLoc - the base folder in which to create the new folders and
    * services.  If not provided, is taken from SASjsConfig.
    * @param serverUrl - the server on which to deploy the folders and services.
    * If not provided, is taken from SASjsConfig.
@@ -648,7 +652,7 @@ export default class SASjs {
 
     let sasApiClient: any = null;
     if (serverUrl || appLoc) {
-      if (!serverUrl) { 
+      if (!serverUrl) {
         serverUrl = this.sasjsConfig.serverUrl;
       }
       if (!appLoc) {
@@ -750,7 +754,7 @@ export default class SASjs {
   }
 
   private async getJobUri(sasJob: string) {
-    if (!this.sasViyaApiClient) return '';
+    if (!this.sasViyaApiClient) return "";
     const jobMap: any = await this.sasViyaApiClient.getAppLocMap();
     let uri = "";
 
