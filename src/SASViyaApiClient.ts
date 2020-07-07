@@ -674,7 +674,7 @@ export class SASViyaApiClient {
       requestInfo
     );
     if (!folder){
-      throw new Error("Cannot populate RootFolderMap unless rootFolder exists");
+      await this.populateRootFolder(accessToken);
     }
     const members = await this.request<{ items: any[] }>(
       `${this.serverUrl}/folders/folders/${folder.id}/members`,
